@@ -83,6 +83,7 @@ def findCores(grayL, grayR, edge, i, j, kL, seg_len, t_dir, t_coeff, h_size=2):
         coef = np.corrcoef(comp)[0, 1]
         if coef > max_coef:
             kR = k
+            max_coef = coef
     return kR
 
     # 匹配梯度方向
@@ -154,10 +155,10 @@ def match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff, win_size=5):
                 if edgeLa[i,j+k] > t_abs:
                     allK.append(k)
 
-            maxGa = -1
-            kL = -1
 
             while len(allK) > 0:
+                maxGa = -1
+                kL = -1
                 for k in allK:
                     if edgeLa[i,j+k] > edgeLa[i,j+kL]:
                         maxGa = edgeLa[i,j+k]
@@ -221,8 +222,8 @@ if __name__ == '__main__':
     rd.astype('uint8')
     cv2.imshow('left grad abs',edge[0])
     cv2.imshow('left grad dir',ld)
-    cv2.imshow('right grad abs',edge[2])
-    cv2.imshow('right grad dir',rd)
+    # cv2.imshow('right grad abs',edge[2])
+    # cv2.imshow('right grad dir',rd)
 
     maxDisp, disp = match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff)
     print 'max disparity: ' , maxDisp
