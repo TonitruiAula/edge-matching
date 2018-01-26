@@ -107,3 +107,6 @@ ENV/
 *.txt
 *.iml
 *.xml
+*.pfm
+*.pyc
+images/test.py

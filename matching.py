@@ -191,7 +191,7 @@ def match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff, win_size=5):
 
 
     maxDisp = disp.max()
-    disp = disp / float(maxDisp)# * 255.0
+    # disp = disp / float(maxDisp)# * 255.0
     # disp.astype('uint8')
     return maxDisp, disp
 
@@ -226,6 +226,12 @@ if __name__ == '__main__':
     # cv2.imshow('right grad dir',rd)
 
     maxDisp, disp = match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff)
+    # disp /= float(maxDisp)
+    disp /= 255.0
+    disp.astype('uint8')
     print 'max disparity: ' , maxDisp
     cv2.imshow('disp',disp)
+    cv2.imwrite('disp.png',disp)
+    # np.savetxt('disp.txt',disp,'%.2f')
+
     cv2.waitKey(0)
