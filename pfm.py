@@ -38,7 +38,7 @@ class pfmDisp:
         se = float(self.file.readline())
         self.endian = se > 0
         self.scale = math.fabs(se)
-        print 'the information of this file:'
+        print 'the information of GT file:'
         print 'type: %s' % self.type
         # print self.type == 'Pf\n'
         print 'width: %d, height: %d' %(self.size[0], self.size[1])

@@ -29,10 +29,10 @@ def getEdge1(imgL, imgR):
     grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
     edgeLa, edgeLd = sob(grayL)
     edgeRa, edgeRd = sob(grayR)
-    np.savetxt('la.txt',edgeLa,'%d')
-    np.savetxt('ld.txt',edgeLd,'%.1f')
-    np.savetxt('ra.txt',edgeRa,'%d')
-    np.savetxt('rd.txt',edgeRd,'%.1f')
+    # np.savetxt('la.txt',edgeLa,'%d')
+    # np.savetxt('ld.txt',edgeLd,'%.1f')
+    # np.savetxt('ra.txt',edgeRa,'%d')
+    # np.savetxt('rd.txt',edgeRd,'%.1f')
     return [edgeLa, edgeLd, edgeRa, edgeRd]
 
 # 找到左视图对应的匹配点
@@ -197,41 +197,3 @@ def match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff, win_size=5):
 
     
 
-if __name__ == '__main__':
-
-    print os.path.abspath(os.curdir)
-    print 'starting...'
-
-    imgpathL = sys.argv[1]
-    imgpathR = sys.argv[2]
-    seg_len = int(sys.argv[3])
-    t_abs = float(sys.argv[4])
-    t_dir = float(sys.argv[5])
-    t_coeff = float(sys.argv[6])
-
-    imgL = cv2.imread(imgpathL)
-    imgR = cv2.imread(imgpathR)
-
-    print imgL.shape
-
-    edge = getEdge1(imgL,imgR)
-
-    ld = edge[1]/90.0
-    ld.astype('uint8')
-    rd = edge[3]/90.0
-    rd.astype('uint8')
-    cv2.imshow('left grad abs',edge[0])
-    cv2.imshow('left grad dir',ld)
-    # cv2.imshow('right grad abs',edge[2])
-    # cv2.imshow('right grad dir',rd)
-
-    maxDisp, disp = match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff)
-    # disp /= float(maxDisp)
-    disp /= 255.0
-    disp.astype('uint8')
-    print 'max disparity: ' , maxDisp
-    cv2.imshow('disp',disp)
-    cv2.imwrite('disp.png',disp)
-    # np.savetxt('disp.txt',disp,'%.2f')
-
-    cv2.waitKey(0)

@@ -100,13 +100,15 @@ ENV/
 # mypy
 .mypy_cache/
 
-*.png
+#*.png
 *.jpg
 *.gif
 *.bmp
-*.txt
+/images/*/*.txt
 *.iml
 *.xml
-*.pfm
+#*.pfm
 *.pyc
 images/test.py
+*.sh
+rst.txt
