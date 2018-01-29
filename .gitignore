@@ -112,3 +112,4 @@ ENV/
 images/test.py
 *.sh
 rst.txt
+rst*.txt
