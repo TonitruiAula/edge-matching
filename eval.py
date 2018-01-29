@@ -14,6 +14,8 @@ def eval(disp, gt):
     err = 0.0
     perfect = 0
     maxerr = 0.0
+    bad = 0
+
     # err_graph = np.zeros((height,width,3),'uint8')
     # err_graph = np.ones((height,width,3),'uint8')
     # err_graph *= 255
@@ -31,7 +33,7 @@ def eval(disp, gt):
                 if e > maxerr:
                     maxerr = e
                 if e > 10:
-                    print '(%d, %d), (%.2f, %.2f, %.2f)' % (i,j,d,g,e) 
+                    bad += 1
                 err += e
                 # err_graph[i,j,0] -= int(e)
                 # err_graph[i,j,1] -= int(e)
@@ -45,10 +47,11 @@ def eval(disp, gt):
     # print 'average error: ', err
     # print 'max error: ', maxerr
     # print 'perfect: ', perfect
-    ratio = float(perfect) / float(count)
+    p_ratio = float(perfect) / float(count)
+    b_ratio = float(bad) / float(count)
     # print 'perfect ratio: ', ratio
 
-    return [count, err, maxerr, perfect, ratio]
+    return [count, err, maxerr, perfect, p_ratio, bad, b_ratio]
     # cv2.imshow('err',err_graph)
     # cv2.waitKey(0)
 
@@ -59,10 +62,10 @@ def evalTxt(name):
 
 def totalRst(imgList):
     log = open('rst.txt','w')
-    print 'count\taverage error\tmax error\tperfect\tperfect ratio\tname'
-    log.write('count\taverage error\tmax error\tperfect\tperfect ratio\tname\n')
+    print 'count\taverage error\tmax error\tperfect\tperfect ratio\tbad\tbad ratio\tname'
+    log.write('count\taverage error\tmax error\tperfect\tperfect ratio\tbad\tbad ratio\tname\n')
     for img in imgList:
-        count, err, maxerr, perfect, ratio = evalTxt(img)    
-        print '%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%s' % (count, err, maxerr, perfect, ratio, img)
-        log.write('%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%s\n' % (count, err, maxerr, perfect, ratio, img))
+        count, err, maxerr, perfect, p_ratio, bad, b_ratio = evalTxt(img)    
+        print '%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%d\t%.5f\t\t%s' % (count, err, maxerr, perfect, p_ratio, bad, b_ratio, img)
+        log.write('%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%d\t%.5f\t\t%s\n' % (count, err, maxerr, perfect, p_ratio, bad, b_ratio, img))
     log.close()

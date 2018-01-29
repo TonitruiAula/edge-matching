@@ -7,11 +7,25 @@ import cv2
 import numpy as np
 import math
 
-def norm(list):
+def norm_scale(list):
     a = np.array(list)
     length = math.sqrt((a**2).sum())
     if length > 0:
         a = a / length
+    return a
+
+def norm_01(list):
+    a = np.array(list)
+    Max = a.max()
+    Min = a.min()
+    if Max-Min > 0:
+        a = (a-Min) / (Max-Min)
+    return a
+def norm_z(list):
+    a = np.array(list)
+    mu = np.average(a)
+    sigma = np.std(a)
+    a = (a - mu) / sigma
     return a
 
 # 利用Sobel算子计算图片的梯度大小和方向
@@ -74,8 +88,12 @@ def getCores(grayL, grayR, index, x, seg, edge, threshold, h_size):
         for _i in xrange(index - h_size, index + h_size + 1):
             for _j in xrange(xR - h_size, xR + h_size + 1):
                 gvecR.append(edgeRa[_i, _j])
-        gvecL = norm(gvecL)
-        gvecR = norm(gvecR)
+        gvecL = norm_scale(gvecL)
+        gvecR = norm_scale(gvecR)
+        # gvecL = norm_01(gvecL)
+        # gvecR = norm_01(gvecR)
+        # gvecL = norm_z(gvecL)
+        # gvecR = norm_z(gvecR)
         comp = np.array([gvecL, gvecR])
         coef = np.corrcoef(comp)[0, 1]
         if coef > t_coeff:
