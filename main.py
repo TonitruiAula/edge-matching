@@ -10,10 +10,15 @@ from matching import *
 from eval import *
 import pfm
 
-def saveDisp(name):
+def saveDisp(name, threshold):
     print 'the current image is: ', name
     imgpathL = 'images/' + name + '/im0.png'
     imgpathR = 'images/' + name + '/im1.png'
+    calib = 'images/' + name + '/calib.txt'
+    f = open(calib,'r')
+    ndispL =  f.readlines()[6] 
+    ndisp = int(ndispL[6:])      
+    f.close()
     imgL = cv2.imread(imgpathL)
     imgR = cv2.imread(imgpathR)
 
@@ -28,7 +33,9 @@ def saveDisp(name):
     # cv2.imshow('left grad abs',edge[0])
     # cv2.imshow('left grad dir',ld)
 
-    maxDisp, disp = match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff)
+    # maxDisp, disp = match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff)
+    maxDisp, disp = match(imgL, imgR, edge, threshold, ndisp)
+    
     # disp /= float(maxDisp)
     # disp /= 255.0
     # disp.astype('uint8')
@@ -51,11 +58,12 @@ if __name__ == '__main__':
     print 'starting...'
 
     imgName = sys.argv[1]
-    seg_len = int(sys.argv[2])
-    t_abs = float(sys.argv[3])
-    t_dir = float(sys.argv[4])
-    t_coeff = float(sys.argv[5])
+    t_abs = float(sys.argv[2])
+    t_dir = float(sys.argv[3])
+    t_coeff = float(sys.argv[4])
         
+    threshold = [t_abs, t_dir, t_coeff]
+
     imgList = []
 
     if imgName == '-all':
@@ -67,9 +75,9 @@ if __name__ == '__main__':
     else:
         imgList.append(imgName)
     
-    if seg_len > 0:
+    if t_abs > 0:
         for name in imgList:
-            disp = saveDisp(name)
+            disp = saveDisp(name, threshold)
             gt = saveGT(name)
             # count, err, maxerr, perfect, ratio = eval(disp,gt)
             # print 'name: '+str(name)+'count: '+str(count)+'average error: '+str(err)+'max error: '+str(maxerr)+'perfect: '+str(perfect)+'perfect ratio: '+str(ratio)

@@ -30,6 +30,8 @@ def eval(disp, gt):
                     perfect += 1
                 if e > maxerr:
                     maxerr = e
+                if e > 10:
+                    print '(%d, %d), (%.2f, %.2f, %.2f)' % (i,j,d,g,e) 
                 err += e
                 # err_graph[i,j,0] -= int(e)
                 # err_graph[i,j,1] -= int(e)
