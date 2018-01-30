@@ -24,7 +24,6 @@ def saveDisp(name, threshold):
 
     print 'shape :', imgL.shape
 
-    edge = getEdge1(imgL,imgR)
 
     # ld = edge[1]/90.0
     # ld.astype('uint8')
@@ -34,7 +33,7 @@ def saveDisp(name, threshold):
     # cv2.imshow('left grad dir',ld)
 
     # maxDisp, disp = match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff)
-    maxDisp, disp = match(imgL, imgR, edge, threshold, ndisp)
+    maxDisp, disp = match(imgL, imgR, threshold, ndisp)
     
     # disp /= float(maxDisp)
     # disp /= 255.0
@@ -49,7 +48,8 @@ def saveGT(name):
     gtPath = 'images/' + name + '/disp0GT.pfm'
     p = pfm.pfmDisp(gtPath)
     gt = p.getDisp()
-    np.savetxt('images/' + name + '/gt.txt',gt,'%.2f')
+    if os.path.exists('images/' + name + '/gt.txt') == False:
+        np.savetxt('images/' + name + '/gt.txt',gt,'%.2f')
     return gt
 
 if __name__ == '__main__':
@@ -70,7 +70,8 @@ if __name__ == '__main__':
         imgListFile = open('imgList.txt','r')
         for img in imgListFile.readlines():
             img = img.strip()
-            imgList.append(img)
+            if img[0] != '#' :
+                imgList.append(img)
 
     else:
         imgList.append(imgName)
