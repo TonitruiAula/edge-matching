@@ -75,11 +75,18 @@ if __name__ == '__main__':
 
     else:
         imgList.append(imgName)
-    
+
+    inf = float('inf')
+
     if t_abs > 0:
         for name in imgList:
-            disp = saveDisp(name, threshold)
             gt = saveGT(name)
+            mp = gt.copy()
+            for i in xrange(mp.shape[0]):
+                for j in xrange(mp.shape[1]):
+                    if gt[i,j] < inf:
+                        mp[i,j] = j - gt[i,j]
+            disp = saveDisp(name, threshold)
             # count, err, maxerr, perfect, ratio = eval(disp,gt)
             # print 'name: '+str(name)+'count: '+str(count)+'average error: '+str(err)+'max error: '+str(maxerr)+'perfect: '+str(perfect)+'perfect ratio: '+str(ratio)
     

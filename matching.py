@@ -65,21 +65,28 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
     t_abs, t_dir, t_coeff = threshold
     lbpDataL, lbpDataR = lbpData
 
-    # LBP特征值相同则加入候选匹配点
-    allX = []
-    for xR in xrange(seg[0], seg[1]):
-        a = lbpDataL[index,x]
-        b = lbpDataR[index,xR]
-        if lbp.diffLBP(lbpDataL[index,x], lbpDataR[index,xR]) < 4:
-            allX.append(xR)
-
-    if len(allX) == 0:
+    # 如果左图的梯度大小过小则跳过
+    if edgeLa[index,x] < t_abs:
         return -1
+
+    # if edgeLd[index,x] == 0.0 or edgeLd[index,x] == 90.0:
+    #     return -1
+
+    # LBP特征值相同则加入候选匹配点
+    # allX = []
+    # for xR in xrange(seg[0], seg[1]):
+    #     a = lbpDataL[index,x]
+    #     b = lbpDataR[index,xR]
+    #     if lbp.diffLBP(lbpDataL[index,x], lbpDataR[index,xR]) < 4:
+    #         allX.append(xR)
+    #
+    # if len(allX) == 0:
+    #     return -1
 
     # 梯度方向差低于某一阈值则加入候选匹配点
     allX2 = []
-    # for xR in xrange(seg[0], seg[1]):
-    for xR in allX:
+    for xR in xrange(seg[0], seg[1]):
+    # for xR in allX:
         if math.fabs(edgeLd[index, x] - edgeRd[index, xR]) < t_dir:
             allX2.append(xR)
     
@@ -122,16 +129,54 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
     max_coef = -1
     xRst = -1
     for xR in allX3:
+        # 如果右图的梯度大小过小则跳过
+        if edgeRa[index,xR] < t_abs:
+            continue
+
+        # if edgeRd[index,xR] == 0.0 or edgeRd[index,xR] == 90.0:
+        #     continue
+
         ggrayR = []
         for _i in xrange(index - h_size, index + h_size + 1):
             for _j in xrange(xR - h_size, xR + h_size + 1):
                 ggrayR.append(grayR[_i, _j])
         comp = np.array([ggrayL, ggrayR])
-        coef = np.corrcoef(comp)[0, 1]
+        coef = np.corrcoef(comp)[0, 1] #+ 1.0 / (1+math.fabs(float(grayL[index,x])-float(grayR[index,xR]))/255.0)
         if coef > max_coef:
             xRst = xR
             max_coef = coef
-    return xRst
+
+
+    # gvecRst = []
+    # ggrayRst = []
+    # for _i in xrange(index - h_size, index + h_size + 1):
+    #     for _j in xrange(xRst - h_size, xRst + h_size + 1):
+    #         gvecRst.append(edgeRa[_i, _j])
+    #         ggrayRst.append(grayR[_i,_j])
+    #
+    # offsets = [-1,0,1]
+    # max_coef = -1
+    # offset = -2
+    #
+    #
+    # for di in offsets:
+    #     gvecLd = []
+    #     ggrayLd = []
+    #     for _i in xrange(index - h_size, index + h_size + 1):
+    #         for _j in xrange(x+di - h_size, x+di + h_size + 1):
+    #             if x+di >= seg[0] and x+di <= seg[1]:
+    #                 gvecLd.append(edgeLa[_i, _j])
+    #                 ggrayLd.append(grayL[_i, _j])
+    #     comp1 = np.array([ggrayLd, ggrayRst])
+    #     comp2 = np.array([gvecLd, gvecRst])
+    #     coef1 = np.corrcoef(comp1)[0, 1]
+    #     coef2 = np.corrcoef(comp2)[0, 1]
+    #     coef = coef1 + coef2
+    #     if coef > max_coef:
+    #         max_coef = coef
+    #         offset = di
+
+    return xRst#, offset
 
 
 # 按行匹配获取视差
@@ -167,6 +212,10 @@ def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h
     # if newseg[1] > grayL.shape[1]-h_size:
     #     newseg[1] = grayL.shape[1]-h_size
     xL = getCores(grayR, grayL, index, xR, [h_size, grayL.shape[1]-h_size], edgeR, lbpDataR, threshold, h_size)
+
+    # if xL > 0 and xR > 0 and math.fabs(xL - xR) < ndisp:
+    #     disp[index,xL] = math.fabs(xL - xR)
+
     # 如果匹配则计算视差
     if x == xL and math.fabs(xL - xR) < ndisp:
         disp[index,x] = math.fabs(xL - xR)
@@ -177,7 +226,7 @@ def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h
     # matchline(grayL, grayR, index, [x+h_size,seg[1]], edge, lbpData, threshold, disp, ndisp, h_size)
 
     
-def match(imgL, imgR, threshold, ndisp, h_size=2):
+def match(imgL, imgR, threshold, ndisp=64, h_size=2):
     # 计算灰度图
     grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
     grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
