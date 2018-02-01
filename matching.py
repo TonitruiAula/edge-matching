@@ -31,17 +31,21 @@ def norm_z(list):
 
 # 利用Sobel算子计算图片的梯度大小和方向
 def sob(img):
-    sobelX = cv2.Sobel(img, cv2.CV_8UC1, 1, 0)
-    sobelY = cv2.Sobel(img, cv2.CV_8UC1, 0, 1)
+    sobelX = cv2.Sobel(img, cv2.CV_32F, 1, 0)
+    sobelY = cv2.Sobel(img, cv2.CV_32F, 0, 1)
+    sobelX = np.fabs(sobelX)
+    sobelY = np.fabs(sobelY)
+
     sobAbs = cv2.addWeighted(sobelX, 0.5, sobelY, 0.5, 0)
-    # sobAbs = sobAbs * (1.0/255)
-    sobDir = np.zeros(img.shape)
-    height = img.shape[0]
-    width = img.shape[1]
-    for i in xrange(height):
-        for j in xrange(width):
-            sobDir[i,j] = math.atan2(math.fabs(sobelY[i,j]), math.fabs(sobelX[i,j])) / (math.pi / 2.0) * 90.0
-    # flag, dst = cv2.threshold(sob, t_bin, 255, cv2.THRESH_OTSU)
+
+    sobDir = cv2.phase(sobelX,sobelY,angleInDegrees=True)
+    # sobDir = np.zeros(img.shape)
+    # height = img.shape[0]
+    # width = img.shape[1]
+    # for i in xrange(height):
+    #     for j in xrange(width):
+    #         sobDir[i,j] = math.atan2(math.fabs(sobelY[i,j]), math.fabs(sobelX[i,j])) / (math.pi / 2.0) * 90.0
+
     return [sobAbs, sobDir]
 
 # 获取左右边缘
@@ -175,6 +179,9 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
     #     if coef > max_coef:
     #         max_coef = coef
     #         offset = di
+
+    if edgeRa[index,xRst] < t_abs:
+        return -1
 
     return xRst#, offset
 
