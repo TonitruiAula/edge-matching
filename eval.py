@@ -6,8 +6,9 @@ import sys
 import cv2
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
-def eval(disp, gt, name, occ=False):
+def eval(disp, gt, name, occ=False, baderr=10):
     height = disp.shape[0]
     width = disp.shape[1]
     count = 0
@@ -15,8 +16,8 @@ def eval(disp, gt, name, occ=False):
     perfect = 0
     maxerr = 0.0
     bad = 0
+    pointerr = []
 
-    badlog = open('images/' + name + '/badlog.txt','w')
     occpath = 'images/' + name + '/mask0nocc.png'
     if os.path.exists(occpath) == False:
         occ = False
@@ -26,6 +27,8 @@ def eval(disp, gt, name, occ=False):
         if len(occfile.shape) == 3:
             occfile = cv2.cvtColor(occfile,cv2.COLOR_BGR2GRAY)
         disp = disp * (occfile == 255)
+    else:
+        badlog = open('images/' + name + '/badlog.txt','w')
 
     # err_graph = np.zeros((height,width,3),'uint8')
     # err_graph = np.ones((height,width,3),'uint8')
@@ -35,7 +38,7 @@ def eval(disp, gt, name, occ=False):
         for j in xrange(width):
             d = float(disp[i,j])
             g = float(gt[i,j])
-            if d > 0 and g <> inf:
+            if d > 0 and g != inf:
                 count += 1
                 e = math.fabs(float(d-g))
                 # print e
@@ -43,10 +46,12 @@ def eval(disp, gt, name, occ=False):
                     perfect += 1
                 if e > maxerr:
                     maxerr = e
-                if e > 10:
+                if e > baderr:
                     bad += 1
-                    badlog.write('(%d, %d) (disp=%.2f,gt=%.2f,error=%.2f)\n' % (i,j,d,g,e))
+                    if occ == False:
+                        badlog.write('(%d, %d) (disp=%.2f,gt=%.2f,error=%.2f)\n' % (i,j,d,g,e))
                 err += e
+                pointerr.append(e)
                 # err_graph[i,j,0] -= int(e)
                 # err_graph[i,j,1] -= int(e)
     # for i in xrange(height):
@@ -64,7 +69,10 @@ def eval(disp, gt, name, occ=False):
     else:
         p_ratio = b_ratio = 0
     # print 'perfect ratio: ', ratio
-    badlog.close()
+    if occ == False:
+        n, bins, patches = plt.hist(pointerr, bins=int(maxerr), normed=1,edgecolor='None',facecolor='red')  
+        plt.savefig('images/' + name + '/hist.png')
+        badlog.close()
     return [count, err, maxerr, perfect, p_ratio, bad, b_ratio]
     # cv2.imshow('err',err_graph)
     # cv2.waitKey(0)
@@ -82,10 +90,10 @@ def totalRst(imgList):
     log_no.write('count\taverage error\tmax error\tperfect\tperfect ratio\tbad\tbad ratio\tname\n')
     for img in imgList:
         count, err, maxerr, perfect, p_ratio, bad, b_ratio = evalTxt(img,False)
-        print '%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%d\t%.5f\t\t%s' % (count, err, maxerr, perfect, p_ratio, bad, b_ratio, img)
+        print '%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%d\t%.5f \t%s' % (count, err, maxerr, perfect, p_ratio, bad, b_ratio, img)
         log.write('%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%d\t%.5f\t\t%s\n' % (count, err, maxerr, perfect, p_ratio, bad, b_ratio, img))
         count, err, maxerr, perfect, p_ratio, bad, b_ratio = evalTxt(img,True)
-        print '%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%d\t%.5f\t\t%s(NO)' % (count, err, maxerr, perfect, p_ratio, bad, b_ratio, img)
+        print '%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%d\t%.5f \t%s(NO)' % (count, err, maxerr, perfect, p_ratio, bad, b_ratio, img)
         log_no.write('%d\t\t%.2f\t%.2f\t\t%d\t%.5f\t\t%d\t%.5f\t\t%s\n' % (count, err, maxerr, perfect, p_ratio, bad, b_ratio, img))
 
     log.close()

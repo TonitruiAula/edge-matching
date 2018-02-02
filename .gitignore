@@ -109,7 +109,9 @@ ENV/
 *.xml
 #*.pfm
 *.pyc
-images/test.py
+images/*.py
 *.sh
 rst.txt
 rst*.txt
+hist.png
+*.zip

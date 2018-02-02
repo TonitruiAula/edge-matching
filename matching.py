@@ -218,7 +218,8 @@ def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h
     #     newseg[0] = h_size
     # if newseg[1] > grayL.shape[1]-h_size:
     #     newseg[1] = grayL.shape[1]-h_size
-    xL = getCores(grayR, grayL, index, xR, [h_size, grayL.shape[1]-h_size], edgeR, lbpDataR, threshold, h_size)
+    newseg = [h_size, grayL.shape[1]-h_size]
+    xL = getCores(grayR, grayL, index, xR, newseg, edgeR, lbpDataR, threshold, h_size)
 
     # if xL > 0 and xR > 0 and math.fabs(xL - xR) < ndisp:
     #     disp[index,xL] = math.fabs(xL - xR)
