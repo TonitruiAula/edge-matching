@@ -8,6 +8,7 @@ import numpy as np
 import math
 from matching import *
 from eval import *
+from analyzing import *
 import pfm
 
 def saveDisp(name, threshold):
@@ -91,3 +92,4 @@ if __name__ == '__main__':
             # print 'name: '+str(name)+'count: '+str(count)+'average error: '+str(err)+'max error: '+str(maxerr)+'perfect: '+str(perfect)+'perfect ratio: '+str(ratio)
     
     totalRst(imgList)
+    analyze(imgName,t_dir,t_coeff)

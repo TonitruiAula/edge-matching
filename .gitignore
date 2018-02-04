@@ -115,3 +115,5 @@ rst.txt
 rst*.txt
 hist.png
 *.zip
+.vscode/settings.json
+badstat.txt

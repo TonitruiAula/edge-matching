@@ -8,6 +8,21 @@ import numpy as np
 import math
 import lbp
 
+def areaCoeff(array1,array2,rad,i1,j1,i2,j2):
+    if i1-rad < 0 or i1+rad >= array1.shape[0] or i2-rad < 0 or i2+rad >= array2.shape[0] \
+        or j1-rad < 0 or j1+rad >= array1.shape[1] or j2-rad < 0 or j2+rad >= array2.shape[1]:
+        return -float('inf')
+    area1 = array1[i1-rad:i1+rad+1,j1-rad:j1+rad+1]
+    area1 = np.reshape(area1,(2*rad+1)**2)
+    area2 = array2[i2-rad:i2+rad+1,j2-rad:j2+rad+1]
+    area2 = np.reshape(area2,(2*rad+1)**2)
+    comp = np.zeros((2,(2*rad+1)**2))
+    comp[0,:] = area1
+    comp[1,:] = area2
+    coef = np.corrcoef(comp)[0, 1]
+    return coef
+
+
 def norm_scale(list):
     a = np.array(list)
     length = math.sqrt((a**2).sum())
@@ -97,30 +112,31 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
     if len(allX2) == 0:
         return -1
 
-    gvecL = []
-    ggrayL = []
+    # gvecL = []
+    # ggrayL = []
 
-    # 梯度大小相关计算，若相关系数大于阈值则保留
-    for _i in xrange(index - h_size, index + h_size + 1):
-        for _j in xrange(x - h_size, x + h_size + 1):
-            gvecL.append(edgeLa[_i, _j])
-            ggrayL.append(grayL[_i, _j])
+    # # 梯度大小相关计算，若相关系数大于阈值则保留
+    # for _i in xrange(index - h_size, index + h_size + 1):
+    #     for _j in xrange(x - h_size, x + h_size + 1):
+    #         gvecL.append(edgeLa[_i, _j])
+    #         ggrayL.append(grayL[_i, _j])
 
     allX3 = []
 
     for xR in allX2:
-        gvecR = []
-        for _i in xrange(index - h_size, index + h_size + 1):
-            for _j in xrange(xR - h_size, xR + h_size + 1):
-                gvecR.append(edgeRa[_i, _j])
-        gvecL = norm_scale(gvecL)
-        gvecR = norm_scale(gvecR)
-        # gvecL = norm_01(gvecL)
-        # gvecR = norm_01(gvecR)
-        # gvecL = norm_z(gvecL)
-        # gvecR = norm_z(gvecR)
-        comp = np.array([gvecL, gvecR])
-        coef = np.corrcoef(comp)[0, 1]
+        # gvecR = []
+        # for _i in xrange(index - h_size, index + h_size + 1):
+        #     for _j in xrange(xR - h_size, xR + h_size + 1):
+        #         gvecR.append(edgeRa[_i, _j])
+        # gvecL = norm_scale(gvecL)
+        # gvecR = norm_scale(gvecR)
+        # # gvecL = norm_01(gvecL)
+        # # gvecR = norm_01(gvecR)
+        # # gvecL = norm_z(gvecL)
+        # # gvecR = norm_z(gvecR)
+        # comp = np.array([gvecL, gvecR])
+        # coef = np.corrcoef(comp)[0, 1]
+        coef = areaCoeff(edgeLa,edgeRa,h_size,index,x,index,xR)
         if coef > t_coeff:
             allX3.append(xR)
         # if coef < t_coeff:
@@ -141,11 +157,12 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
         #     continue
 
         ggrayR = []
-        for _i in xrange(index - h_size, index + h_size + 1):
-            for _j in xrange(xR - h_size, xR + h_size + 1):
-                ggrayR.append(grayR[_i, _j])
-        comp = np.array([ggrayL, ggrayR])
-        coef = np.corrcoef(comp)[0, 1] #+ 1.0 / (1+math.fabs(float(grayL[index,x])-float(grayR[index,xR]))/255.0)
+        # for _i in xrange(index - h_size, index + h_size + 1):
+        #     for _j in xrange(xR - h_size, xR + h_size + 1):
+        #         ggrayR.append(grayR[_i, _j])
+        # comp = np.array([ggrayL, ggrayR])
+        # coef = np.corrcoef(comp)[0, 1] 
+        coef = areaCoeff(grayL,grayR,h_size,index,x,index,xR)
         if coef > max_coef:
             xRst = xR
             max_coef = coef
@@ -225,8 +242,8 @@ def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h
     #     disp[index,xL] = math.fabs(xL - xR)
 
     # 如果匹配则计算视差
-    if x == xL and math.fabs(xL - xR) < ndisp:
-        disp[index,x] = math.fabs(xL - xR)
+    if x == xL and float(xL - xR) < ndisp and float(xL - xR) > 0:
+        disp[index,x] = float(xL - xR)
     # 匹配左右子区间视差
     matchline(grayL, grayR, index, [seg[0],x], edge, lbpData, threshold, disp, ndisp, h_size)
     matchline(grayL, grayR, index, [x+1,seg[1]], edge, lbpData, threshold, disp, ndisp, h_size)
