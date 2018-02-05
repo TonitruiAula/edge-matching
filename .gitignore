@@ -100,7 +100,7 @@ ENV/
 # mypy
 .mypy_cache/
 
-#*.png
+*.png
 *.jpg
 *.gif
 *.bmp
@@ -117,3 +117,4 @@ hist.png
 *.zip
 .vscode/settings.json
 badstat.txt
+*.txt

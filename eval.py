@@ -71,13 +71,15 @@ def eval(disp, gt, name, occ=False, baderr=2):
     else:
         p_ratio = b_ratio = 0
     # print 'perfect ratio: ', ratio
+    n, bins, patches = plt.hist(pointerr, bins=int(maxerr), normed=1,edgecolor='None',facecolor='red')  
+    badpoints.sort(key=operator.itemgetter(4),reverse=True)
+    badarray = np.array(badpoints)
     if occ == False:
-        n, bins, patches = plt.hist(pointerr, bins=int(maxerr), normed=1,edgecolor='None',facecolor='red')  
         plt.savefig('images/' + name + '/hist.png')
-        badpoints.sort(key=operator.itemgetter(4),reverse=True)
-        badarray = np.array(badpoints)
         np.savetxt('images/' + name + '/badlog.txt',badarray,fmt='%d %d %.2f %.2f %.2f')
-        # badlog.close()
+    else:
+        plt.savefig('images/' + name + '/hist_no.png')
+        np.savetxt('images/' + name + '/badlog_no.txt',badarray,fmt='%d %d %.2f %.2f %.2f')
     return [count, err, maxerr, perfect, p_ratio, bad, b_ratio]
     # cv2.imshow('err',err_graph)
     # cv2.waitKey(0)

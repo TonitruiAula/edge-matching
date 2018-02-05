@@ -9,7 +9,7 @@ import math
 from matching import *
 
 
-def analyze(imgName,t_dir,t_coeff):
+def analyze(imgName,t_dir,t_coeff,occ=False):
     # t_dir = float(raw_input('input dir threshold:'))
     # t_coeff = float(raw_input('input abs threshold:'))
     # imgName = raw_input('input image name:')
@@ -23,7 +23,10 @@ def analyze(imgName,t_dir,t_coeff):
     else:
         imgList.append(imgName)
 
-    badstat = open('badstat.txt','w')
+    if occ == False:
+        badstat = open('badstat.txt','w')
+    else:
+        badstat = open('badstat_no.txt','w')
 
     for img in imgList:
         imgpathL = 'images/' + img + '/im0.png'
@@ -37,10 +40,16 @@ def analyze(imgName,t_dir,t_coeff):
 
         edgeLa, edgeLd, edgeRa, edgeRd = getEdge1(imgL,imgR)
 
-        badpoints = np.loadtxt('images/' + img + '/badlog.txt')
+        if occ == False:
+            badpoints = np.loadtxt('images/' + img + '/badlog.txt')
+        else:
+            badpoints = np.loadtxt('images/' + img + '/badlog_no.txt')
         count = badpoints.shape[0]
         badtypecount = [0,0,0,0,0,0,0,0]
-        rst = open('images/' + img + '/analyzing_result.txt','w')
+        if occ == False:
+            rst = open('images/' + img + '/analyzing_result.txt','w')
+        else:
+            rst = open('images/' + img + '/analyzing_result_no.txt','w')
         rst.write('total badpoints = %d, t_dir = %.2f, t_coeff = %.2f\n' % (count,t_dir,t_coeff))
         rst.write('y\txL\txRe\txRg\te\t\tdL\t\tdRe\t\tdRg\t\trGe\t\trGg\t\trAe\t\trAg\t\ttype\n')
         for index in xrange(count):
@@ -77,4 +86,5 @@ if __name__ == '__main__':
     imgName = sys.argv[1]
     t_dir = float(sys.argv[2])
     t_coeff = float(sys.argv[3])
-    analyze(imgName,t_dir,t_coeff)
+    analyze(imgName,t_dir,t_coeff,False)
+    analyze(imgName,t_dir,t_coeff,True)
