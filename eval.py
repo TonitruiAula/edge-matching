@@ -18,7 +18,7 @@ def eval(disp, gt, name, occ=False, baderr=2):
     maxerr = 0.0
     pointerr = []
     badpoints = []
-
+    # 获取遮挡信息图
     occpath = 'images/' + name + '/mask0nocc.png'
     if os.path.exists(occpath) == False:
         occ = False

@@ -9,6 +9,7 @@ import math
 import lbp
 import operator
 
+# 计算区域核的相关系数
 def areaCoeff(array1,array2,rad,i1,j1,i2,j2):
     if i1-rad < 0 or i1+rad >= array1.shape[0] or i2-rad < 0 or i2+rad >= array2.shape[0] \
         or j1-rad < 0 or j1+rad >= array1.shape[1] or j2-rad < 0 or j2+rad >= array2.shape[1]:
@@ -23,14 +24,13 @@ def areaCoeff(array1,array2,rad,i1,j1,i2,j2):
     coef = np.corrcoef(comp)[0, 1]
     return coef
 
-
+# 三个归一化函数（并没有什么用）
 def norm_scale(list):
     a = np.array(list)
     length = math.sqrt((a**2).sum())
     if length > 0:
         a = a / length
     return a
-
 def norm_01(list):
     a = np.array(list)
     Max = a.max()
@@ -51,17 +51,8 @@ def sob(img):
     sobelY = cv2.Sobel(img, cv2.CV_32F, 0, 1)
     sobelX = np.fabs(sobelX)
     sobelY = np.fabs(sobelY)
-
     sobAbs = cv2.addWeighted(sobelX, 0.5, sobelY, 0.5, 0)
-
     sobDir = cv2.phase(sobelX,sobelY,angleInDegrees=True)
-    # sobDir = np.zeros(img.shape)
-    # height = img.shape[0]
-    # width = img.shape[1]
-    # for i in xrange(height):
-    #     for j in xrange(width):
-    #         sobDir[i,j] = math.atan2(math.fabs(sobelY[i,j]), math.fabs(sobelX[i,j])) / (math.pi / 2.0) * 90.0
-
     return [sobAbs, sobDir]
 
 # 获取左右边缘
@@ -113,35 +104,14 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
     if len(allX2) == 0:
         return -1
 
-    # gvecL = []
-    # ggrayL = []
-
-    # # 梯度大小相关计算，若相关系数大于阈值则保留
-    # for _i in xrange(index - h_size, index + h_size + 1):
-    #     for _j in xrange(x - h_size, x + h_size + 1):
-    #         gvecL.append(edgeLa[_i, _j])
-    #         ggrayL.append(grayL[_i, _j])
+    # 梯度大小相关计算，若相关系数大于阈值则保留
 
     allX3 = []
 
     for xR in allX2:
-        # gvecR = []
-        # for _i in xrange(index - h_size, index + h_size + 1):
-        #     for _j in xrange(xR - h_size, xR + h_size + 1):
-        #         gvecR.append(edgeRa[_i, _j])
-        # gvecL = norm_scale(gvecL)
-        # gvecR = norm_scale(gvecR)
-        # # gvecL = norm_01(gvecL)
-        # # gvecR = norm_01(gvecR)
-        # # gvecL = norm_z(gvecL)
-        # # gvecR = norm_z(gvecR)
-        # comp = np.array([gvecL, gvecR])
-        # coef = np.corrcoef(comp)[0, 1]
         coef = areaCoeff(edgeLa,edgeRa,h_size,index,x,index,xR)
         if coef > t_coeff:
             allX3.append(xR)
-        # if coef < t_coeff:
-        #     allX.remove(xR)
 
     if len(allX3) == 0:
         return -1
@@ -156,55 +126,18 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
 
         # if edgeRd[index,xR] == 0.0 or edgeRd[index,xR] == 90.0:
         #     continue
-        #
-        # ggrayR = []
-        # for _i in xrange(index - h_size, index + h_size + 1):
-        #     for _j in xrange(xR - h_size, xR + h_size + 1):
-        #         ggrayR.append(grayR[_i, _j])
-        # comp = np.array([ggrayL, ggrayR])
-        # coef = np.corrcoef(comp)[0, 1] 
         coef = areaCoeff(grayL,grayR,h_size,index,x,index,xR)
         if coef > max_coef:
             xRst = xR
             max_coef = coef
 
-
-    # gvecRst = []
-    # ggrayRst = []
-    # for _i in xrange(index - h_size, index + h_size + 1):
-    #     for _j in xrange(xRst - h_size, xRst + h_size + 1):
-    #         gvecRst.append(edgeRa[_i, _j])
-    #         ggrayRst.append(grayR[_i,_j])
-    #
-    # offsets = [-1,0,1]
-    # max_coef = -1
-    # offset = -2
-    #
-    #
-    # for di in offsets:
-    #     gvecLd = []
-    #     ggrayLd = []
-    #     for _i in xrange(index - h_size, index + h_size + 1):
-    #         for _j in xrange(x+di - h_size, x+di + h_size + 1):
-    #             if x+di >= seg[0] and x+di <= seg[1]:
-    #                 gvecLd.append(edgeLa[_i, _j])
-    #                 ggrayLd.append(grayL[_i, _j])
-    #     comp1 = np.array([ggrayLd, ggrayRst])
-    #     comp2 = np.array([gvecLd, gvecRst])
-    #     coef1 = np.corrcoef(comp1)[0, 1]
-    #     coef2 = np.corrcoef(comp2)[0, 1]
-    #     coef = coef1 + coef2
-    #     if coef > max_coef:
-    #         max_coef = coef
-    #         offset = di
-
     if edgeRa[index,xRst] < t_abs:
         return -1
 
-    return xRst#, offset
+    return xRst
 
 
-# 按行匹配获取视差
+# 按行匹配获取视差（递归）
 def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h_size):
     # 如果区间长度不够长则返回
     seglen = seg[1] - seg[0]
@@ -254,6 +187,7 @@ def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h
     # matchline(grayL, grayR, index, [x+h_size,seg[1]], edge, lbpData, threshold, disp, ndisp, h_size)
 
 
+# 按行匹配获取视差（全行区间）
 def matchline2(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h_size):
     # 如果区间长度不够长则返回
     seglen = seg[1] - seg[0]

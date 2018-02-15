@@ -8,11 +8,9 @@ import numpy as np
 import math
 from matching import *
 
-
+# 分析坏点的各项数据
 def analyze(imgName,t_dir,t_coeff,occ=False):
-    # t_dir = float(raw_input('input dir threshold:'))
-    # t_coeff = float(raw_input('input abs threshold:'))
-    # imgName = raw_input('input image name:')
+    # 获取图片
     imgList = []
     if imgName == '-all':
         imgListFile = open('imgList.txt','r')
@@ -23,12 +21,14 @@ def analyze(imgName,t_dir,t_coeff,occ=False):
     else:
         imgList.append(imgName)
 
+    # 坏点分析结果
     if occ == False:
         badstat = open('badstat.txt','w')
     else:
         badstat = open('badstat_no.txt','w')
 
     for img in imgList:
+        # 读取左右视图
         imgpathL = 'images/' + img + '/im0.png'
         imgpathR = 'images/' + img + '/im1.png'
 
@@ -40,12 +40,15 @@ def analyze(imgName,t_dir,t_coeff,occ=False):
 
         edgeLa, edgeLd, edgeRa, edgeRd = getEdge1(imgL,imgR)
 
+        # 读取坏点信息文件
         if occ == False:
             badpoints = np.loadtxt('images/' + img + '/badlog.txt')
         else:
             badpoints = np.loadtxt('images/' + img + '/badlog_no.txt')
-        count = badpoints.shape[0]
-        badtypecount = [0,0,0,0,0,0,0,0]
+        
+        count = badpoints.shape[0]  #坏点个数
+        badtypecount = [0,0,0,0,0,0,0,0]    #各种错误的计数
+        # 打开分析文件
         if occ == False:
             rst = open('images/' + img + '/analyzing_result.txt','w')
         else:

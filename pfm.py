@@ -15,6 +15,7 @@ class pfmDisp:
         if self.file.closed == False:
             self.file.close()
 
+    # 打印文件头信息
     def printInfo(self):
         print self.file.readline()
         a = self.file.readline()
@@ -30,6 +31,7 @@ class pfmDisp:
         print [width,height]
         print int(size)
 
+    # 获取文件头信息
     def getInfo(self):
         self.file.seek(0)
         self.type = self.file.readline()
@@ -47,7 +49,8 @@ class pfmDisp:
         else:
             print 'endian: Little-Endian'
         print 'scale: %f\n' % self.scale
-        
+    
+    # 将视差.pfm文件转为文本文件
     def getDisp(self):
         self.getInfo()
         width = self.size[0]
@@ -74,6 +77,7 @@ class pfmDisp:
         self.hasDisp = True
         return self.disp
 
+    # 将视差图可视化
     def getDispGraph(self):
         if not self.hasDisp:
             self.getDispGraph()
