@@ -118,3 +118,4 @@ hist.png
 .vscode/settings.json
 badstat.txt
 *.txt
+/results

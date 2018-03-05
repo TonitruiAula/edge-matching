@@ -117,8 +117,9 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
         return -1
 
     # 匹配灰度相关计算，取相关系数最大的作为结果
-    max_coef = -1
+    # max_coef = -1
     xRst = -1
+    grayCoef = []
     for xR in allX3:
         # 如果右图的梯度大小过小则跳过
         if edgeRa[index,xR] < t_abs:
@@ -127,9 +128,16 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
         # if edgeRd[index,xR] == 0.0 or edgeRd[index,xR] == 90.0:
         #     continue
         coef = areaCoeff(grayL,grayR,h_size,index,x,index,xR)
-        if coef > max_coef:
-            xRst = xR
-            max_coef = coef
+        grayCoef.append([xR,coef])
+        # if coef > max_coef:
+        #     xRst = xR
+        #     max_coef = coef
+    if len(grayCoef) == 0:
+        return -1
+    grayCoef.sort(key=operator.itemgetter(1),reverse = True)
+    if len(grayCoef) > 1 and grayCoef[0][1] - grayCoef[1][1] < 0.2:
+        return -1
+    xRst = grayCoef[0][0]
 
     if edgeRa[index,xRst] < t_abs:
         return -1
@@ -207,7 +215,7 @@ def matchline2(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, 
             points.append([i,edgeLa[index, i]])
     if len(points) == 0:
         return
-    points.sort(key=operator.itemgetter(1))
+    points.sort(key=operator.itemgetter(1),reverse = True)
     while len(points) > 0:
         curpoint = points.pop()
         x = curpoint[0]
