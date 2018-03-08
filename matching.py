@@ -69,12 +69,13 @@ def getEdge1(imgL, imgR):
     return [edgeLa, edgeLd, edgeRa, edgeRd]
 
 # 找到对应的匹配点
-def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
+# def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
+def getCores(grayL, grayR, index, x, seg, edge, threshold, h_size):
     if x == -1:
         return -1
     edgeLa, edgeLd, edgeRa, edgeRd = edge
     t_abs, t_dir, t_coeff = threshold
-    lbpDataL, lbpDataR = lbpData
+    # lbpDataL, lbpDataR = lbpData
 
     # 如果左图的梯度大小过小则跳过
     if edgeLa[index,x] < t_abs:
@@ -121,9 +122,9 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
     xRst = -1
     grayCoef = []
     for xR in allX3:
-        # 如果右图的梯度大小过小则跳过
-        if edgeRa[index,xR] < t_abs:
-            continue
+        # 如果右图的梯度大小过小则跳过(可能删去正确的点？)
+        # if edgeRa[index,xR] < t_abs:
+        #     continue
 
         # if edgeRd[index,xR] == 0.0 or edgeRd[index,xR] == 90.0:
         #     continue
@@ -138,7 +139,9 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
     if len(grayCoef) > 1 and grayCoef[0][1] - grayCoef[1][1] < 0.2:
         return -1
     xRst = grayCoef[0][0]
-
+    # (最大的coeff可能不够大)
+    if grayCoef[0][1] < t_coeff:
+        return -1
     if edgeRa[index,xRst] < t_abs:
         return -1
 
@@ -146,7 +149,8 @@ def getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size):
 
 
 # 按行匹配获取视差（递归）
-def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h_size):
+# def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h_size):
+def matchline(grayL, grayR, index, seg, edge, threshold, disp, ndisp, h_size):
     # 如果区间长度不够长则返回
     seglen = seg[1] - seg[0]
     if seglen <= h_size:
@@ -155,7 +159,7 @@ def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h
     edgeLa, edgeLd, edgeRa, edgeRd = edge
     # 反向边缘数据
     edgeR = [edgeRa, edgeRd, edgeLa, edgeLd]
-    lbpDataR = [lbpData[1],lbpData[0]]
+    # lbpDataR = [lbpData[1],lbpData[0]]
     # 获取阈值
     t_abs, t_dir, t_coeff = threshold
     # 获取区间内的最大梯度点
@@ -172,7 +176,9 @@ def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h
     if maxEdge < t_abs:
         return
     # 找到对应的右图点
-    xR = getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size)
+    # xR = getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size)
+    xR = getCores(grayL, grayR, index, x, seg, edge, threshold, h_size)
+    
     # 反向找到对应的左图点
     # newseg = [seg[0]-seglen, seg[1]+seglen]
     # if newseg[0] < h_size:
@@ -180,7 +186,8 @@ def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h
     # if newseg[1] > grayL.shape[1]-h_size:
     #     newseg[1] = grayL.shape[1]-h_size
     newseg = [h_size, grayL.shape[1]-h_size]
-    xL = getCores(grayR, grayL, index, xR, newseg, edgeR, lbpDataR, threshold, h_size)
+    # xL = getCores(grayR, grayL, index, xR, newseg, edgeR, lbpDataR, threshold, h_size)
+    xL = getCores(grayR, grayL, index, xR, newseg, edgeR, threshold, h_size)
 
     # if xL > 0 and xR > 0 and math.fabs(xL - xR) < ndisp:
     #     disp[index,xL] = math.fabs(xL - xR)
@@ -189,14 +196,19 @@ def matchline(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h
     if x == xL and float(xL - xR) < ndisp and float(xL - xR) > 0:
         disp[index,x] = float(xL - xR)
     # 匹配左右子区间视差
-    matchline(grayL, grayR, index, [seg[0],x], edge, lbpData, threshold, disp, ndisp, h_size)
-    matchline(grayL, grayR, index, [x+1,seg[1]], edge, lbpData, threshold, disp, ndisp, h_size)
+    # matchline(grayL, grayR, index, [seg[0],x], edge, lbpData, threshold, disp, ndisp, h_size)
+    # matchline(grayL, grayR, index, [x+1,seg[1]], edge, lbpData, threshold, disp, ndisp, h_size)
+    matchline(grayL, grayR, index, [seg[0],x], edge, threshold, disp, ndisp, h_size)
+    matchline(grayL, grayR, index, [x+1,seg[1]], edge, threshold, disp, ndisp, h_size)
+
+
     # matchline(grayL, grayR, index, [seg[0],x-h_size], edge, lbpData, threshold, disp, ndisp, h_size)
     # matchline(grayL, grayR, index, [x+h_size,seg[1]], edge, lbpData, threshold, disp, ndisp, h_size)
 
 
 # 按行匹配获取视差（全行区间）
-def matchline2(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h_size):
+# def matchline2(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, h_size):
+def matchline2(grayL, grayR, index, seg, edge, threshold, disp, ndisp, h_size):
     # 如果区间长度不够长则返回
     seglen = seg[1] - seg[0]
     if seglen <= h_size:
@@ -205,7 +217,7 @@ def matchline2(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, 
     edgeLa, edgeLd, edgeRa, edgeRd = edge
     # 反向边缘数据
     edgeR = [edgeRa, edgeRd, edgeLa, edgeLd]
-    lbpDataR = [lbpData[1],lbpData[0]]
+    # lbpDataR = [lbpData[1],lbpData[0]]
     # 获取阈值
     t_abs, t_dir, t_coeff = threshold
     # 获取区间内的最大梯度点
@@ -215,12 +227,19 @@ def matchline2(grayL, grayR, index, seg, edge, lbpData, threshold, disp, ndisp, 
             points.append([i,edgeLa[index, i]])
     if len(points) == 0:
         return
-    points.sort(key=operator.itemgetter(1),reverse = True)
+    points.sort(key=operator.itemgetter(1))
+    coresXL = {}
     while len(points) > 0:
         curpoint = points.pop()
         x = curpoint[0]
-        xR = getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size)
-        xL = getCores(grayR, grayL, index, xR, seg, edgeR, lbpDataR, threshold, h_size)
+        # xR = getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size)
+        xR = getCores(grayL, grayR, index, x, seg, edge, threshold, h_size)
+        if coresXL.has_key(xR) == False:
+            # xL = getCores(grayR, grayL, index, xR, seg, edgeR, lbpDataR, threshold, h_size)
+            xL = getCores(grayR, grayL, index, xR, seg, edgeR, threshold, h_size)
+            coresXL[xR] = xL
+        else:
+            xL = coresXL[xR]
         
         # 如果匹配则计算视差
         if x == xL and float(xL - xR) < ndisp and float(xL - xR) > 0:
@@ -239,22 +258,23 @@ def match(imgL, imgR, threshold, ndisp=64, h_size=2):
     width = imgL.shape[1]
 
     edge = getEdge1(imgL,imgR)
-    lbpData = [lbp.getLBP(grayL),lbp.getLBP(grayR)]
+    # lbpData = [lbp.getLBP(grayL),lbp.getLBP(grayR)]
 
     # 初始化视差图
     disp = np.zeros((height,width))
     count = 0   #非零视差点个数
     for i in xrange(h_size, height-h_size):
-        # if i == 24:
-        #     pass
         # 逐行匹配获取视差
-        matchline2(grayL, grayR, i, [h_size, width-h_size], edge, lbpData, threshold, disp, ndisp, h_size)
-        for j in xrange(width):
-            if disp[i,j] > 0:
-                count += 1
-    ratio = float(count) / float(height*width)
-    print 'count : ', count
-    print ('ratio : %.6f' %(ratio))
+        # matchline2(grayL, grayR, i, [h_size, width-h_size], edge, lbpData, threshold, disp, ndisp, h_size)
+        matchline2(grayL, grayR, i, [h_size, width-h_size], edge, threshold, disp, ndisp, h_size)
+
+
+    #     for j in xrange(width):
+    #         if disp[i,j] > 0:
+    #             count += 1
+    # ratio = float(count) / float(height*width)
+    # print 'count : ', count
+    # print ('ratio : %.6f' %(ratio))
 
 
     maxDisp = disp.max()

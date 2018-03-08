@@ -15,9 +15,9 @@ def draw(arg):
     xL = int(badlog[index,1])
     xRe = int(xL - badlog[index,2]) + width
     xRg = int(xL - badlog[index,3]) + width
-    cv2.circle(canvas,(xL,y),3,(255,0,0))
-    cv2.circle(canvas,(xRe,y),3,(0,0,255))
-    cv2.circle(canvas,(xRg,y),3,(0,255,0))
+    cv2.circle(canvas,(xL,y),4,(255,0,0))
+    cv2.circle(canvas,(xRe,y),4,(0,0,255))
+    cv2.circle(canvas,(xRg,y),4,(0,255,0))
     cv2.imshow(img,canvas)
 
 
