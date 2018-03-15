@@ -136,7 +136,7 @@ def getCores(grayL, grayR, index, x, seg, edge, threshold, h_size):
     if len(grayCoef) == 0:
         return -1
     grayCoef.sort(key=operator.itemgetter(1),reverse = True)
-    if len(grayCoef) > 1 and grayCoef[0][1] - grayCoef[1][1] < 0.2:
+    if len(grayCoef) > 1 and grayCoef[0][1] - grayCoef[1][1] < 0.1:
         return -1
     xRst = grayCoef[0][0]
     # (最大的coeff可能不够大)
@@ -171,12 +171,11 @@ def matchline(grayL, grayR, index, seg, edge, threshold, disp, ndisp, h_size):
             x = i
     if x == -1:
         return
-    # if x == 682:
-    #     pass
     if maxEdge < t_abs:
         return
     # 找到对应的右图点
-    # xR = getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size)
+    # xR = getCores(grayL,
+    #  grayR, index, x, seg, edge, lbpData, threshold, h_size)
     xR = getCores(grayL, grayR, index, x, seg, edge, threshold, h_size)
     
     # 反向找到对应的左图点
@@ -234,6 +233,10 @@ def matchline2(grayL, grayR, index, seg, edge, threshold, disp, ndisp, h_size):
         x = curpoint[0]
         # xR = getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size)
         xR = getCores(grayL, grayR, index, x, seg, edge, threshold, h_size)
+
+        if xR == -1:
+            continue
+
         if coresXL.has_key(xR) == False:
             # xL = getCores(grayR, grayL, index, xR, seg, edgeR, lbpDataR, threshold, h_size)
             xL = getCores(grayR, grayL, index, xR, seg, edgeR, threshold, h_size)
@@ -257,7 +260,7 @@ def match(imgL, imgR, threshold, ndisp=64, h_size=2):
     height = imgL.shape[0]
     width = imgL.shape[1]
 
-    edge = getEdge1(imgL,imgR)
+    edge = getEdge1(imgL,imgR)  ###应该改为灰度！！！！！！
     # lbpData = [lbp.getLBP(grayL),lbp.getLBP(grayR)]
 
     # 初始化视差图
