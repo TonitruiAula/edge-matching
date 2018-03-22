@@ -248,6 +248,63 @@ def matchline2(grayL, grayR, index, seg, edge, threshold, disp, ndisp, h_size):
         if x == xL and float(xL - xR) < ndisp and float(xL - xR) > 0:
             disp[index,x] = float(xL - xR)
 
+def matchline3(grayL, grayR, index, seg, edge, threshold, disp, ndisp, h_size):
+    # 如果区间长度不够长则返回
+    seglen = seg[1] - seg[0]
+    if seglen <= h_size:
+        return
+    # 边缘数据
+    edgeLa, edgeLd, edgeRa, edgeRd = edge
+    # 反向边缘数据
+    edgeR = [edgeRa, edgeRd, edgeLa, edgeLd]
+    # lbpDataR = [lbpData[1],lbpData[0]]
+    # 获取阈值
+    t_abs, t_dir, t_coeff = threshold
+    # 获取区间内的最大梯度点
+    points = []
+    for i in xrange(seg[0], seg[1]):
+        if edgeLa[index, i] > t_abs:
+            points.append([i,edgeLa[index, i]])
+    if len(points) == 0:
+        return
+    points.sort(key=operator.itemgetter(1))
+    coresXL = {}
+    width = grayL.shape[1]
+    while len(points) > 0:
+        curpoint = points.pop()
+        x = curpoint[0]
+        newseg = [x-ndisp*2-h_size,x+ndisp+h_size*2]
+        if newseg[0] <= h_size:
+            newseg[0] = h_size+1
+        if newseg[1] >= width - h_size:
+            newseg[1] = width-(h_size+1)
+        
+        # xR = getCores(grayL, grayR, index, x, seg, edge, lbpData, threshold, h_size)
+        xR = getCores(grayL, grayR, index, x, newseg, edge, threshold, h_size)
+
+        if math.fabs(int(grayL[index,x])-int(grayR[index,xR])) >= 5:
+            continue
+
+        if xR == -1:
+            continue
+
+        if coresXL.has_key(xR) == False:
+            # xL = getCores(grayR, grayL, index, xR, seg, edgeR, lbpDataR, threshold, h_size)
+            newsegR = [xR-ndisp*2-h_size,xR+ndisp*2+h_size]
+            if newsegR[0] <= h_size:
+                newsegR[0] = h_size+1
+            if newsegR[1] >= width - h_size:
+                newsegR[1] = width-(h_size+1)
+            xL = getCores(grayR, grayL, index, xR, newsegR, edgeR, threshold, h_size)
+            coresXL[xR] = xL
+        else:
+            xL = coresXL[xR]
+        
+        # 如果匹配则计算视差
+        if x == xL and float(xL - xR) < ndisp and float(xL - xR) > 0:
+            disp[index,x] = float(xL - xR)
+
+
 
 
  
@@ -268,8 +325,8 @@ def match(imgL, imgR, threshold, ndisp=64, h_size=2):
     count = 0   #非零视差点个数
     for i in xrange(h_size, height-h_size):
         # 逐行匹配获取视差
-        # matchline2(grayL, grayR, i, [h_size, width-h_size], edge, lbpData, threshold, disp, ndisp, h_size)
-        matchline2(grayL, grayR, i, [h_size, width-h_size], edge, threshold, disp, ndisp, h_size)
+        # matchline2(grayL, grayR, i, [h_size, width-h_size], edge, threshold, disp, ndisp, h_size)
+        matchline3(grayL, grayR, i, [h_size, width-h_size], edge, threshold, disp, ndisp, h_size)
 
 
     #     for j in xrange(width):

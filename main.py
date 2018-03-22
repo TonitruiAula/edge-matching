@@ -68,7 +68,7 @@ if __name__ == '__main__':
     # 如果t_abs小于等于0则直接分析结果
     if t_abs > 0:
         for name in imgList:
-            gt = saveGT(name)
+            # gt = saveGT(name)
             # # mp是右图匹配点的位置，debug用
             # mp = gt.copy()
             # for i in xrange(mp.shape[0]):

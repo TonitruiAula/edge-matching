@@ -41,12 +41,16 @@ def analyze(imgName,t_dir,t_coeff,occ=False):
         edgeLa, edgeLd, edgeRa, edgeRd = getEdge1(imgL,imgR)
 
         # 读取坏点信息文件
-        if occ == False:
+        if occ == False and os.path.exists('images/' + img + '/badlog.txt'):
             badpoints = np.loadtxt('images/' + img + '/badlog.txt')
-        else:
+        elif os.path.exists('images/' + img + '/badlog_no.txt'):
             badpoints = np.loadtxt('images/' + img + '/badlog_no.txt')
+        else:
+            continue
         
         count = badpoints.shape[0]  #坏点个数
+        if count <= 0:
+            continue
         badtypecount = [0,0,0,0,0,0,0,0]    #各种错误的计数
         # 打开分析文件
         if occ == False:

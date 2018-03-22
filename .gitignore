@@ -117,5 +117,11 @@ hist.png
 *.zip
 .vscode/settings.json
 badstat.txt
-*.txt
 /results
+images/*/mask0nocc.png
+mind.py
+images/000000_10/m.py
+imgList.txt
+images/kitti
+images/000000_10
+mind.py

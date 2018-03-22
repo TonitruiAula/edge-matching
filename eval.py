@@ -49,7 +49,7 @@ def eval(disp, gt, name, occ=False, baderr=2):
         for j in xrange(width):
             d = float(disp[i,j])
             g = float(gt[i,j])
-            if d > 0 and g != inf:
+            if d > 0 and g != inf and g != 0:
                 count += 1
                 e = math.fabs(float(d-g))
                 zd = (baselines*f)/(d+doffs)
@@ -93,10 +93,12 @@ def eval(disp, gt, name, occ=False, baderr=2):
     badarray = np.array(badpoints)
     if occ == False:
         plt.savefig('images/' + name + '/hist.png')
-        np.savetxt('images/' + name + '/badlog.txt',badarray,fmt='%d %d %.2f %.2f %.2f')
+        if bad > 0:
+            np.savetxt('images/' + name + '/badlog.txt',badarray,fmt='%d %d %.2f %.2f %.2f')
     else:
         plt.savefig('images/' + name + '/hist_no.png')
-        np.savetxt('images/' + name + '/badlog_no.txt',badarray,fmt='%d %d %.2f %.2f %.2f')
+        if bad > 0:
+            np.savetxt('images/' + name + '/badlog_no.txt',badarray,fmt='%d %d %.2f %.2f %.2f')
     return [count, err, maxerr, perfect, p_ratio, bad, b_ratio, errZ, maxerrZ]
     # cv2.imshow('err',err_graph)
     # cv2.waitKey(0)
