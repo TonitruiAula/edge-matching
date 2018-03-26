@@ -12,7 +12,7 @@ from analyzing import *
 import pfm
 
 # 计算并保存视差数据
-def saveDisp(name, threshold):
+def saveDisp(name, param, fun_type):
     print 'the current image is: ', name
     imgpathL = 'images/' + name + '/im0.png'
     imgpathR = 'images/' + name + '/im1.png'
@@ -26,8 +26,13 @@ def saveDisp(name, threshold):
 
     print 'shape :', imgL.shape
     # maxDisp, disp = match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff)
-    maxDisp, disp = match(imgL, imgR, threshold, ndisp)
-    
+    if fun_type == '-g':
+        maxDisp, disp = match(imgL, imgR, param, ndisp)
+    elif fun_type == '-o':
+        maxDisp, disp = match2(imgL, imgR, param, ndisp)
+    else:
+        print 'function type error!'
+        return
     np.savetxt('images/' + name + '/disp.txt',disp,'%.2f')
     return disp
 
@@ -46,11 +51,8 @@ if __name__ == '__main__':
     print 'starting...'
 
     imgName = sys.argv[1]   #图片的名称
-    t_abs = float(sys.argv[2])  #t_abs:边缘绝对值的阈值，低于该值则不计算
-    t_dir = float(sys.argv[3])  #t_dir:边缘方向差的阈值，左右图像的点的边缘方向差小于该阈值则将其放入候选点
-    t_coeff = float(sys.argv[4])    #t_coeff:相关系数的阈值，核的边缘绝对值的相关系数低于该阈值则去掉
+    fun_type = sys.argv[2]
         
-    threshold = [t_abs, t_dir, t_coeff]
 
     imgList = []
     # 从./imgList.txt文件中读取图片列表
@@ -66,18 +68,20 @@ if __name__ == '__main__':
     inf = float('inf')
 
     # 如果t_abs小于等于0则直接分析结果
-    if t_abs > 0:
+    if fun_type == '-g':
+        t_abs = float(sys.argv[3])  #t_abs:边缘绝对值的阈值，低于该值则不计算
+        t_dir = float(sys.argv[4])  #t_dir:边缘方向差的阈值，左右图像的点的边缘方向差小于该阈值则将其放入候选点
+        t_coeff = float(sys.argv[5])    #t_coeff:相关系数的阈值，核的边缘绝对值的相关系数低于该阈值则去掉
+        param = [t_abs, t_dir, t_coeff]
         for name in imgList:
             # gt = saveGT(name)
-            # # mp是右图匹配点的位置，debug用
-            # mp = gt.copy()
-            # for i in xrange(mp.shape[0]):
-            #     for j in xrange(mp.shape[1]):
-            #         if gt[i,j] < inf:
-            #             mp[i,j] = j - gt[i,j]
-            disp = saveDisp(name, threshold)
-            # count, err, maxerr, perfect, ratio = eval(disp,gt)
-            # print 'name: '+str(name)+'count: '+str(count)+'average error: '+str(err)+'max error: '+str(maxerr)+'perfect: '+str(perfect)+'perfect ratio: '+str(ratio)
-    
-    totalRst(imgList)
-    analyze(imgName,t_dir,t_coeff)
+            disp = saveDisp(name, param, fun_type)
+        totalRst(imgList)
+        analyze(imgName,t_dir,t_coeff)
+    elif fun_type == '-o':
+        num = int(sys.argv[3])
+        for name in imgList:
+            disp = saveDisp(name, num, fun_type)
+        totalRst(imgList)
+    else:
+        totalRst(imgList)

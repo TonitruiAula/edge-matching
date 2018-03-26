@@ -343,6 +343,85 @@ def match(imgL, imgR, threshold, ndisp=64, h_size=2):
     return maxDisp, disp
 
 
+def getCores2(grayL, grayR, index, x, seg, edge, h_size):
+    if x == -1:
+        return -1
+    edgeLa, edgeLd, edgeRa, edgeRd = edge
+
+    xRst = -1
+    allCoef = []
+    for xR in xrange(seg[0], seg[1]):
+        coefE = areaCoeff(edgeLa,edgeRa,h_size,index,x,index,xR)
+        coefG = areaCoeff(grayL,grayR,h_size,index,x,index,xR)
+        allCoef.append([xR,coefE+coefG])
+
+
+    if len(allCoef) == 0:
+        return -1
+
+    if len(allCoef) == 0:
+        return -1
+    allCoef.sort(key=operator.itemgetter(1),reverse = True)
+    if len(allCoef) > 1 and allCoef[0][1] - allCoef[1][1] < 0.1:
+        return -1
+    xRst = allCoef[0][0]
+
+    return xRst
+    
+
+
+def match2(imgL, imgR, num, ndisp=64, h_size=2):
+    orb = cv2.ORB_create(nfeatures = num)
+    kp,des = orb.detectAndCompute(imgL,None)
+    grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+    grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+    edge = getEdge1(imgL,imgR)
+    # 边缘数据
+    edgeLa, edgeLd, edgeRa, edgeRd = edge
+    # 反向边缘数据
+    edgeR = [edgeRa, edgeRd, edgeLa, edgeLd]
+    height = grayL.shape[0]
+    width = grayL.shape[1]
+    disp = np.zeros((height,width))
+    coresXL = {}
+    for p in kp:
+        x = int(round(p.pt[0]))
+        index = int(round(p.pt[1]))
+        newseg = [x-ndisp*2-h_size,x+ndisp+h_size*2]
+        if newseg[0] <= h_size:
+            newseg[0] = h_size+1
+        if newseg[1] >= width - h_size:
+            newseg[1] = width-(h_size+1)
+        
+        xR = getCores2(grayL, grayR, index, x, newseg, edge, h_size)
+
+        if math.fabs(int(grayL[index,x])-int(grayR[index,xR])) >= 5:
+            continue
+
+        if xR == -1:
+            continue
+
+        if coresXL.has_key(xR) == False:
+            newsegR = [xR-ndisp*2-h_size,xR+ndisp*2+h_size]
+            if newsegR[0] <= h_size:
+                newsegR[0] = h_size+1
+            if newsegR[1] >= width - h_size:
+                newsegR[1] = width-(h_size+1)
+            xL = getCores2(grayR, grayL, index, xR, newsegR, edgeR, h_size)
+            coresXL[xR] = xL
+        else:
+            xL = coresXL[xR]
+        
+        # 如果匹配则计算视差
+        if x == xL and float(xL - xR) < ndisp and float(xL - xR) > 0:
+            disp[index,x] = float(xL - xR)
+    maxDisp = disp.max()
+    # disp = disp / float(maxDisp)# * 255.0
+    # disp.astype('uint8')
+    return maxDisp, disp
+
+        
+
 
 
 
