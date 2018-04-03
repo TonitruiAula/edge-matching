@@ -26,10 +26,19 @@ if __name__ == '__main__':
     imgpathL = 'images/' + img + '/im0.png'
     imgpathR = 'images/' + img + '/im1.png'
 
+    noocc = sys.argv[2] == '-n'
+
     imgL = cv2.imread(imgpathL)
     imgR = cv2.imread(imgpathR)
 
-    badlog = np.loadtxt('images/' + img + '/badlog.txt')
+    if os.path.exists('images/' + img + '/badlog_no.txt') == False:
+        print 'Cannot find no-occ badlog file'
+        noocc = False
+
+    if noocc:
+        badlog = np.loadtxt('images/' + img + '/badlog_no.txt')
+    else:
+        badlog = np.loadtxt('images/' + img + '/badlog.txt')
     count = badlog.shape[0]
     rst = np.zeros([imgL.shape[0],imgL.shape[1]+imgR.shape[1],imgL.shape[2]],imgL.dtype)
     width = imgL.shape[1]

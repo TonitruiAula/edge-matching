@@ -136,8 +136,8 @@ def getCores(grayL, grayR, index, x, seg, edge, threshold, h_size):
     if len(grayCoef) == 0:
         return -1
     grayCoef.sort(key=operator.itemgetter(1),reverse = True)
-    if len(grayCoef) > 1 and grayCoef[0][1] - grayCoef[1][1] < 0.1:
-        return -1
+    # if len(grayCoef) > 1 and grayCoef[0][1] - grayCoef[1][1] < 0.1:
+    #     return -1
     xRst = grayCoef[0][0]
     # (最大的coeff可能不够大)
     if grayCoef[0][1] < t_coeff:
@@ -362,8 +362,8 @@ def getCores2(grayL, grayR, index, x, seg, edge, h_size):
     if len(allCoef) == 0:
         return -1
     allCoef.sort(key=operator.itemgetter(1),reverse = True)
-    if len(allCoef) > 1 and allCoef[0][1] - allCoef[1][1] < 0.1:
-        return -1
+    # if len(allCoef) > 1 and allCoef[0][1] - allCoef[1][1] < 0.1:
+    #     return -1
     xRst = allCoef[0][0]
 
     return xRst
@@ -418,6 +418,28 @@ def match2(imgL, imgR, num, ndisp=64, h_size=2):
     maxDisp = disp.max()
     # disp = disp / float(maxDisp)# * 255.0
     # disp.astype('uint8')
+    return maxDisp, disp
+
+
+def match3(imgL, imgR, num, ndisp=64):
+    orb = cv2.ORB_create(nfeatures = num*2)
+    kp1,des1 = orb.detectAndCompute(imgL,None)
+    kp2,des2 = orb.detectAndCompute(imgR,None)
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1,des2)
+    matches = sorted(matches, key = lambda x:x.distance) 
+    height = imgL.shape[0]
+    width = imgL.shape[1]
+    disp = np.zeros((height,width))
+    num = len(matches) / 2
+    for i in xrange(num):
+        x1 = int(kp1[matches[i].queryIdx].pt[0])
+        y1 = int(kp1[matches[i].queryIdx].pt[1])
+        x2 = int(kp2[matches[i].trainIdx].pt[0])
+        y2 = int(kp2[matches[i].trainIdx].pt[1])
+        if y1 == y2 and x1 - x2 <= ndisp:
+            disp[y1,x1] = x1 - x2
+    maxDisp = disp.max()
     return maxDisp, disp
 
         

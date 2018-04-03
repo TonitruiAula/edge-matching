@@ -125,3 +125,7 @@ imgList.txt
 images/kitti
 images/000000_10
 mind.py
+imgList*.txt
+imgList.txt
+badstat_no.txt
+imgList.txt

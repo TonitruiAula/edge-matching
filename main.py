@@ -29,7 +29,8 @@ def saveDisp(name, param, fun_type):
     if fun_type == '-g':
         maxDisp, disp = match(imgL, imgR, param, ndisp)
     elif fun_type == '-o':
-        maxDisp, disp = match2(imgL, imgR, param, ndisp)
+        # maxDisp, disp = match2(imgL, imgR, param, ndisp)
+        maxDisp, disp = match3(imgL, imgR, param, ndisp)
     else:
         print 'function type error!'
         return
@@ -77,7 +78,8 @@ if __name__ == '__main__':
             # gt = saveGT(name)
             disp = saveDisp(name, param, fun_type)
         totalRst(imgList)
-        analyze(imgName,t_dir,t_coeff)
+        analyze(imgName,t_dir,t_coeff,False)
+        analyze(imgName,t_dir,t_coeff,True)
     elif fun_type == '-o':
         num = int(sys.argv[3])
         for name in imgList:
