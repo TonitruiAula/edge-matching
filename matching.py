@@ -421,7 +421,7 @@ def match2(imgL, imgR, num, ndisp=64, h_size=2):
     return maxDisp, disp
 
 
-def match3(imgL, imgR, num, ndisp=64, h_size=2, t_coeff=0.85, scale=6):
+def match3(imgL, imgR, num, t_coeff, scale, ndisp=64, h_size=2):
     grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
     grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
     orb = cv2.ORB_create(nfeatures = int(num*scale))

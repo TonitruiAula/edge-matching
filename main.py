@@ -30,7 +30,8 @@ def saveDisp(name, param, fun_type):
         maxDisp, disp = match(imgL, imgR, param, ndisp)
     elif fun_type == '-o':
         # maxDisp, disp = match2(imgL, imgR, param, ndisp)
-        maxDisp, disp = match3(imgL, imgR, param)
+        num, t_coeff, scale = param
+        maxDisp, disp = match3(imgL, imgR, num, t_coeff, scale)
     else:
         print 'function type error!'
         return
@@ -82,8 +83,11 @@ if __name__ == '__main__':
         analyze(imgName,t_dir,t_coeff,True)
     elif fun_type == '-o':
         num = int(sys.argv[3])
+        t_coeff = float(sys.argv[4])
+        scale = float(sys.argv[5])
+        param = [num, t_coeff, scale]
         for name in imgList:
-            disp = saveDisp(name, num, fun_type)
+            disp = saveDisp(name, param, fun_type)
         totalRst(imgList)
     else:
         totalRst(imgList)

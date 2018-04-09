@@ -9,7 +9,7 @@ import math
 import matplotlib.pyplot as plt
 import operator
 
-def eval(disp, gt, name, occ=False, baderr=2):
+def eval(disp, gt, name, occ=False, baderr=1, baderrZ=0):
     height = disp.shape[0]
     width = disp.shape[1]
     count = 0
@@ -20,6 +20,9 @@ def eval(disp, gt, name, occ=False, baderr=2):
     maxerrZ = 0.0
     pointerr = []
     badpoints = []
+    deptherr = []
+    badpointsZ = []
+
     # 获取遮挡信息图
     occpath = 'images/' + name + '/mask0nocc.png'
     caliFile = open('images/' + name + '/calib.txt','r')
@@ -67,8 +70,11 @@ def eval(disp, gt, name, occ=False, baderr=2):
                 err += e
                 if ze > maxerrZ:
                     maxerrZ = ze
+                if ze > baderrZ:
+                    badpointsZ.append([i,j,d,g,zd,zg,ze])
                 errZ += ze
                 pointerr.append(e)
+                deptherr.append(ze)
                 # err_graph[i,j,0] -= int(e)
                 # err_graph[i,j,1] -= int(e)
     # for i in xrange(height):
@@ -76,6 +82,7 @@ def eval(disp, gt, name, occ=False, baderr=2):
     #             err_graph[i,j,0] -= int(e / maxerr * 255.0)
     #             err_graph[i,j,1] -= int(e / maxerr * 255.0)
     bad = len(badpoints)
+    badZ = len(badpointsZ)
     if count > 0:
         err /= count
         errZ /= count
@@ -88,7 +95,7 @@ def eval(disp, gt, name, occ=False, baderr=2):
     else:
         p_ratio = b_ratio = 0
     # print 'perfect ratio: ', ratio
-    n, bins, patches = plt.hist(pointerr, bins=int(maxerr), normed=1,edgecolor='None',facecolor='red')  
+    n, bins, patches = plt.hist(pointerr, bins=int(round(maxerr)), normed=1,edgecolor='None',facecolor='red')
     badpoints.sort(key=operator.itemgetter(4),reverse=True)
     badarray = np.array(badpoints)
     if occ == False:
@@ -99,6 +106,16 @@ def eval(disp, gt, name, occ=False, baderr=2):
         plt.savefig('images/' + name + '/hist_no.png')
         if bad > 0:
             np.savetxt('images/' + name + '/badlog_no.txt',badarray,fmt='%d %d %.2f %.2f %.2f')
+    
+    if badZ > 0:
+        # nZ, binsZ, patchesZ = plt.hist(deptherr, bins=int(maxerrZ), normed=1,edgecolor='None',facecolor='red')
+        # plt.savefig('images/' + name + '/hist_depth.png')
+        badpointsZ.sort(key=operator.itemgetter(6),reverse=True)
+        badarrayZ = np.array(badpointsZ)
+        np.savetxt('images/' + name + '/badlog_depth.txt',badarrayZ,fmt='%d %d %.2f %.2f %.2f %.2f %.2f')
+
+    
+
     return [count, err, maxerr, perfect, p_ratio, bad, b_ratio, errZ, maxerrZ]
     # cv2.imshow('err',err_graph)
     # cv2.waitKey(0)
