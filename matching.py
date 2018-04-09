@@ -421,8 +421,10 @@ def match2(imgL, imgR, num, ndisp=64, h_size=2):
     return maxDisp, disp
 
 
-def match3(imgL, imgR, num, ndisp=64):
-    orb = cv2.ORB_create(nfeatures = num*2)
+def match3(imgL, imgR, num, ndisp=64, h_size=2, t_coeff=0.85, scale=6):
+    grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+    grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+    orb = cv2.ORB_create(nfeatures = int(num*scale))
     kp1,des1 = orb.detectAndCompute(imgL,None)
     kp2,des2 = orb.detectAndCompute(imgR,None)
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
@@ -431,14 +433,24 @@ def match3(imgL, imgR, num, ndisp=64):
     height = imgL.shape[0]
     width = imgL.shape[1]
     disp = np.zeros((height,width))
-    num = len(matches) / 2
+    num = int(len(matches) / scale)
     for i in xrange(num):
         x1 = int(kp1[matches[i].queryIdx].pt[0])
         y1 = int(kp1[matches[i].queryIdx].pt[1])
         x2 = int(kp2[matches[i].trainIdx].pt[0])
         y2 = int(kp2[matches[i].trainIdx].pt[1])
-        if y1 == y2 and x1 - x2 <= ndisp:
-            disp[y1,x1] = x1 - x2
+        if x1 <= h_size or x1 >= width-h_size:
+            continue
+        if y1 <= h_size or y1 >= height-h_size:
+            continue
+        if x2 <= h_size or x2 >= width-h_size:
+            continue
+        if y2 <= h_size or y2 >= height-h_size:
+            continue
+        if y1 == y2: #and x1 - x2 <= ndisp and x1 - x2 >= 10:
+            coef = areaCoeff(grayL,grayR,h_size,y1,x1,y2,x2)
+            if coef >= t_coeff:
+                disp[y1,x1] = x1 - x2
     maxDisp = disp.max()
     return maxDisp, disp
 

@@ -30,7 +30,7 @@ def saveDisp(name, param, fun_type):
         maxDisp, disp = match(imgL, imgR, param, ndisp)
     elif fun_type == '-o':
         # maxDisp, disp = match2(imgL, imgR, param, ndisp)
-        maxDisp, disp = match3(imgL, imgR, param, ndisp)
+        maxDisp, disp = match3(imgL, imgR, param)
     else:
         print 'function type error!'
         return
