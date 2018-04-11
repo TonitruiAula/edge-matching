@@ -24,6 +24,7 @@ def saveDisp(name, param, fun_type):
     imgL = cv2.imread(imgpathL)
     imgR = cv2.imread(imgpathR)
 
+
     print 'shape :', imgL.shape
     # maxDisp, disp = match1(imgL, imgR, edge, seg_len, t_abs, t_dir, t_coeff)
     if fun_type == '-g':

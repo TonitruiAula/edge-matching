@@ -8,6 +8,7 @@ import numpy as np
 import math
 import lbp
 import operator
+from preprocess import *
 
 # 计算区域核的相关系数
 def areaCoeff(array1,array2,rad,i1,j1,i2,j2):
@@ -424,6 +425,11 @@ def match2(imgL, imgR, num, ndisp=64, h_size=2):
 def match3(imgL, imgR, num, t_coeff, scale, ndisp=64, h_size=2):
     grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
     grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+
+    # 预处理
+    imgL = lapEnhance(avgBlur(imgL))
+    imgR = lapEnhance(avgBlur(imgR))
+
     orb = cv2.ORB_create(nfeatures = int(num*scale))
     kp1,des1 = orb.detectAndCompute(imgL,None)
     kp2,des2 = orb.detectAndCompute(imgR,None)
