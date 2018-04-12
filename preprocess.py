@@ -10,6 +10,16 @@ def hisEqual(img):
 	cv2.cvtColor(ycrcb, cv2.COLOR_YCR_CB2BGR, img)
 	return img
 
+def hisEqualc(img):
+	rst = img.copy()
+	channels = cv2.split(rst)
+	#print len(channels)
+	for i in xrange(3):
+		cv2.equalizeHist(channels[i], channels[i])
+	cv2.merge(channels, rst)
+	return rst
+
+
 def avgBlur(img):
 	# channels = cv2.split(img)
 	# for c in channels:
@@ -17,6 +27,7 @@ def avgBlur(img):
 	# cv2.merge(channels,img)
 	img = cv2.blur(img,(3,3))
 	return img
+
 
 def lapEnhance(img):
 	kernel = np.array([[0,-1,0],[-1,5,-1],[0,-1,0]])

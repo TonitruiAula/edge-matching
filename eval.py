@@ -9,22 +9,20 @@ import math
 import matplotlib.pyplot as plt
 import operator
 
-def eval(disp, gt, name, occ=False, baderr=1, baderrZ=0):
+
+def getLog(disp, gt, name):
     height = disp.shape[0]
     width = disp.shape[1]
     count = 0
     err = 0.0
-    perfect = 0
     maxerr = 0.0
     errZ = 0.0
     maxerrZ = 0.0
     pointerr = []
-    badpoints = []
+    points = []
     deptherr = []
-    badpointsZ = []
 
     # 获取遮挡信息图
-    occpath = 'images/' + name + '/mask0nocc.png'
     caliFile = open('images/' + name + '/calib.txt','r')
     caliLines = caliFile.readlines()
     fl = float(caliLines[0].split('[')[1].split(' ')[0])
@@ -33,20 +31,6 @@ def eval(disp, gt, name, occ=False, baderr=1, baderrZ=0):
     doffs = float(caliLines[2].split('=')[1])
     baselines = float(caliLines[3].split('=')[1])
     caliFile.close()
-    if os.path.exists(occpath) == False:
-        occ = False
-    occfile = None
-    if occ:
-        occfile = cv2.imread(occpath)
-        if len(occfile.shape) == 3:
-            occfile = cv2.cvtColor(occfile,cv2.COLOR_BGR2GRAY)
-        disp = disp * (occfile == 255)
-    # else:
-    #     badlog = open('images/' + name + '/badlog.txt','w')
-
-    # err_graph = np.zeros((height,width,3),'uint8')
-    # err_graph = np.ones((height,width,3),'uint8')
-    # err_graph *= 255
     inf = float('inf')
     for i in xrange(height):
         for j in xrange(width):
@@ -58,85 +42,60 @@ def eval(disp, gt, name, occ=False, baderr=1, baderrZ=0):
                 zd = (baselines*f)/(d+doffs)
                 zg = (baselines*f)/(g+doffs)
                 ze = math.fabs(zd-zg)
+                zr = ze / zg
                 # print e
-                if e == 0:
-                    perfect += 1
                 if e > maxerr:
                     maxerr = e
-                if e > baderr:
-                    badpoints.append([i,j,d,g,e])
-                    # if occ == False:
-                    #     badlog.write('(%d, %d) (disp=%.2f,gt=%.2f,error=%.2f)\n' % (i,j,d,g,e))
                 err += e
                 if ze > maxerrZ:
                     maxerrZ = ze
-                if ze > baderrZ:
-                    badpointsZ.append([i,j,d,g,zd,zg,ze])
+                points.append([i,j,d,g,e,zd,zg,ze,zr])
                 errZ += ze
                 pointerr.append(e)
                 deptherr.append(ze)
-                # err_graph[i,j,0] -= int(e)
-                # err_graph[i,j,1] -= int(e)
-    # for i in xrange(height):
-    #     for j in xrange(width):
-    #             err_graph[i,j,0] -= int(e / maxerr * 255.0)
-    #             err_graph[i,j,1] -= int(e / maxerr * 255.0)
-    bad = len(badpoints)
-    badZ = len(badpointsZ)
+
     if count > 0:
         err /= count
         errZ /= count
-    # print 'count: ', count
-    # print 'average error: ', err
-    # print 'max error: ', maxerr
-    # print 'perfect: ', perfect
-        p_ratio = float(perfect) / float(count)
-        b_ratio = float(bad) / float(count)
-    else:
-        p_ratio = b_ratio = 0
-    # print 'perfect ratio: ', ratio
+
     n, bins, patches = plt.hist(pointerr, bins=int(round(maxerr)), normed=1,edgecolor='None',facecolor='red')
-    badpoints.sort(key=operator.itemgetter(4),reverse=True)
-    badarray = np.array(badpoints)
-    if occ == False:
-        plt.savefig('images/' + name + '/hist.png')
-        if bad > 0:
-            np.savetxt('images/' + name + '/badlog.txt',badarray,fmt='%d %d %.2f %.2f %.2f')
-    else:
-        plt.savefig('images/' + name + '/hist_no.png')
-        if bad > 0:
-            np.savetxt('images/' + name + '/badlog_no.txt',badarray,fmt='%d %d %.2f %.2f %.2f')
     
-    if badZ > 0:
-        # nZ, binsZ, patchesZ = plt.hist(deptherr, bins=int(maxerrZ), normed=1,edgecolor='None',facecolor='red')
-        # plt.savefig('images/' + name + '/hist_depth.png')
-        badpointsZ.sort(key=operator.itemgetter(6),reverse=True)
-        badarrayZ = np.array(badpointsZ)
-        np.savetxt('images/' + name + '/badlog_depth.txt',badarrayZ,fmt='%d %d %.2f %.2f %.2f %.2f %.2f')
+    points.sort(key=operator.itemgetter(7),reverse=True)
+    np.savetxt('images/' + name + '/log.txt',points,fmt='%d %d %.2f %.2f %.2f %.2f %.2f %.2f %.6f')
 
-    
+    return [count, err, maxerr, errZ, maxerrZ]
 
-    return [count, err, maxerr, perfect, p_ratio, bad, b_ratio, errZ, maxerrZ]
-    # cv2.imshow('err',err_graph)
-    # cv2.waitKey(0)
 
-def evalTxt(name, occ=False):
-    disp = np.loadtxt('images/' + name + '/disp.txt')
-    gt = np.loadtxt('images/' + name + '/gt.txt')
-    return eval(disp, gt, name, occ)
-
-def totalRst(imgList):
-    log = open('rst.txt','w')
-    log_no = open('rst_no_occlution.txt','w')
-    print 'count\taverage error\tmax error\taverage errorZ\tmax errorZ\tperfect\tperfect ratio\tbad\tbad ratio\tname'
-    log.write('count\taverage error\tmax error\taverage errorZ\tmax errorZ\tperfect\tperfect ratio\tbad\tbad ratio\tname\n\n')
-    log_no.write('count\taverage error\tmax error\taverage errorZ\tmax errorZ\tperfect\tperfect ratio\tbad\tbad ratio\tname\n')
+def totalRst(imgList, scale=0.025, t=0.9):
+    print 'saving result...'
+    rst = open('rst.txt','w')
+    print 'num \tape \tmpe \tade \tmde \tdis \tname\n'
+    rst.write('num \tape \tmpe \tade \tmde \tdis \tname\n\n')
     for img in imgList:
-        count, err, maxerr, perfect, p_ratio, bad, b_ratio, errZ, maxerrZ= evalTxt(img,False)
-        print '%d\t\t%.2f\t\t%.2f\t\t%.2f\t\t\t%.2f\t%d\t%.5f\t\t%d\t%.5f \t%s' % (count, err, maxerr, errZ, maxerrZ, perfect, p_ratio, bad, b_ratio, img)
-        log.write('%d\t%.2f\t%.2f\t%.2f\t%.2f\t%d\t\t%.5f\t%d\t%.5f\t%s\n' % (count, err, maxerr, errZ, maxerrZ, perfect, p_ratio, bad, b_ratio, img))
-        count, err, maxerr, perfect, p_ratio, bad, b_ratio, errZ, maxerrZ = evalTxt(img,True)
-        print '%d\t\t%.2f\t\t%.2f\t\t%.2f\t\t\t%.2f\t%d\t%.5f\t\t%d\t%.5f \t%s(NO)' % (count, err, maxerr, errZ, maxerrZ, perfect, p_ratio, bad, b_ratio, img)
-        log_no.write('%d\t\t%.2f\t\t%.2f\t\t%.2f\t\t\t%.2f\t%d\t%.5f\t\t%d\t%.5f\t\t%s\n' % (count, err, maxerr, errZ, maxerrZ, perfect, p_ratio, bad, b_ratio, img))
+        disp = np.loadtxt('images/' + img + '/disp.txt')
+        gt = np.loadtxt('images/' + img + '/gt.txt')
+        count, err, maxerr, errZ, maxerrZ = getLog(disp, gt, img)
+        logarray = np.loadtxt('images/' + img + '/log.txt')
+        points = logarray.tolist()
+        points.sort(key=operator.itemgetter(8))
+        cur = 0
+        good = 0
+        mark = []
+        for p in points:
+            cur += 1
+            if p[8] < scale:
+                good += 1
+            ratio = float(good)/cur
+            mark.append([p[6],ratio])
+        dis = 0.0
+        for d in mark:
+            if d[1] > t:
+                dis = d[0]
+        rst.write('%6d\t%6.2f\t%6.2f\t%8.2f\t%8.2f\t%8.2f\t %s\n' % (count,err,maxerr,errZ,maxerrZ,dis,img))
+        print '%6d\t%6.2f\t%6.2f\t%6.2f\t %6.2f\t%8.2f\t %s' % (count,err,maxerr,errZ,maxerrZ,dis,img)
+    rst.close()
+    
 
-    log.close()
+
+
+

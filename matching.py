@@ -427,8 +427,10 @@ def match3(imgL, imgR, num, t_coeff, scale, ndisp=64, h_size=2):
     grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
 
     # 预处理
-    imgL = lapEnhance(avgBlur(imgL))
-    imgR = lapEnhance(avgBlur(imgR))
+    # imgL = cv2.medianBlur(imgL,3)
+    # imgR = cv2.medianBlur(imgR,3)
+    # imgL = hisEqualc(imgL)
+    # imgR = hisEqualc(imgR)
 
     orb = cv2.ORB_create(nfeatures = int(num*scale))
     kp1,des1 = orb.detectAndCompute(imgL,None)
