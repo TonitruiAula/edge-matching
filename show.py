@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import math
 import operator
+from matching import areaCoeff
 
 def draw(arg):
     index = cv2.getTrackbarPos('index',img)
@@ -19,7 +20,9 @@ def draw(arg):
     cv2.circle(canvas,(xL,y),4,(255,0,0))
     cv2.circle(canvas,(xRe,y),4,(0,0,255))
     cv2.circle(canvas,(xRg,y),4,(0,255,0))
-    print 'x=%d y=%d perr=%.2f derr=%.2f der=%.6f' % (points[index,1],points[index,0],points[index,4],points[index,7],points[index,8])
+    coeffE = areaCoeff(grayL,grayR,2,y,xL,y,xRe-width)
+    coeffGT = areaCoeff(grayL,grayR,2,y,xL,y,xRg-width)
+    print 'x=%d y=%d perr=%.2f derr=%.2f ratio=%.6f coeffE=%.6f coeffGT=%.6f' % (points[index,1],points[index,0],points[index,4],points[index,7],points[index,8],coeffE,coeffGT)
     cv2.imshow(img,canvas)
 
 
@@ -32,6 +35,10 @@ if __name__ == '__main__':
 
     imgL = cv2.imread(imgpathL)
     imgR = cv2.imread(imgpathR)
+
+    grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+    grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+
 
     log = np.loadtxt('images/' + img + '/log.txt')
     loglist = log.tolist()

@@ -65,35 +65,79 @@ def getLog(disp, gt, name):
 
     return [count, err, maxerr, errZ, maxerrZ]
 
+def getDis(img, scale=0.05, t=0.85):
+    logarray = np.loadtxt('images/' + img + '/log.txt')
+    points = logarray.tolist()
+    points.sort(key=operator.itemgetter(6))
+    cur = 0
+    good = 0
+    mark = []
+    for p in points:
+        cur += 1
+        if p[8] < scale:
+            good += 1
+        ratio = float(good)/cur
+        mark.append([p[6],p[8],ratio])
+    dis = 0.0
+    r = 0.0
+    ok = True
+    for d in mark:
+        if d[2] > t:
+            dis = d[0]
+            r = d[2]
+    markArr = np.array(mark)
+    np.savetxt('images/' + img + '/mark.txt',markArr,fmt='%.2f\t%.6f\t%.6f')
+    if dis == 0.0:
+        ok = False
+        mark.sort(key=operator.itemgetter(2),reverse=True)
+        r = mark[0][2]
+        dis = mark[0][0]
+    return [dis,ok,r]
 
-def totalRst(imgList, scale=0.025, t=0.9):
+
+def totalRst(imgList):
     print 'saving result...'
     rst = open('rst.txt','w')
     print 'num \tape \tmpe \tade \tmde \tdis \tname\n'
     rst.write('num \tape \tmpe \tade \tmde \tdis \tname\n\n')
+    bad = 0
+    totalDis = []
     for img in imgList:
         disp = np.loadtxt('images/' + img + '/disp.txt')
         gt = np.loadtxt('images/' + img + '/gt.txt')
         count, err, maxerr, errZ, maxerrZ = getLog(disp, gt, img)
-        logarray = np.loadtxt('images/' + img + '/log.txt')
-        points = logarray.tolist()
-        points.sort(key=operator.itemgetter(8))
-        cur = 0
-        good = 0
-        mark = []
-        for p in points:
-            cur += 1
-            if p[8] < scale:
-                good += 1
-            ratio = float(good)/cur
-            mark.append([p[6],ratio])
-        dis = 0.0
-        for d in mark:
-            if d[1] > t:
-                dis = d[0]
-        rst.write('%6d\t%6.2f\t%6.2f\t%8.2f\t%8.2f\t%8.2f\t %s\n' % (count,err,maxerr,errZ,maxerrZ,dis,img))
-        print '%6d\t%6.2f\t%6.2f\t%6.2f\t %6.2f\t%8.2f\t %s' % (count,err,maxerr,errZ,maxerrZ,dis,img)
+        # logarray = np.loadtxt('images/' + img + '/log.txt')
+        # points = logarray.tolist()
+        # points.sort(key=operator.itemgetter(6))
+        # cur = 0
+        # good = 0
+        # mark = []
+        # for p in points:
+        #     cur += 1
+        #     if p[8] < scale:
+        #         good += 1
+        #     ratio = float(good)/cur
+        #     mark.append([p[6],p[8],ratio])
+        # dis = 0.0
+        # for d in mark:
+        #     if d[2] > t:
+        #         dis = d[0]
+        # markArr = np.array(mark)
+        # np.savetxt('images/' + img + '/mark.txt',markArr,fmt='%.2f\t%.6f\t%.6f')
+        dis,ok,r = getDis(img)
+        totalDis.append(dis)
+        if ok == False:
+            rst.write('%6d\t%6.2f\t%6.2f\t%8.2f\t%8.2f\t%8.2f\t %s(BAD:%.6f)\n' % (count,err,maxerr,errZ,maxerrZ,dis,img,r))
+            print '%6d\t%6.2f\t%6.2f\t%6.2f\t %6.2f\t%8.2f\t %s(BAD:%.6f)' % (count,err,maxerr,errZ,maxerrZ,dis,img,r)
+            bad += 1
+        else:
+            rst.write('%6d\t%6.2f\t%6.2f\t%8.2f\t%8.2f\t%8.2f\t %s\n' % (count,err,maxerr,errZ,maxerrZ,dis,img))
+            print '%6d\t%6.2f\t%6.2f\t%6.2f\t %6.2f\t%8.2f\t %s' % (count,err,maxerr,errZ,maxerrZ,dis,img)
+    n, bins, patches = plt.hist(totalDis, bins=10,edgecolor='None',facecolor='green')
+    plt.savefig('dis.png')
+
     rst.close()
+    print 'bad:',bad
     
 
 
