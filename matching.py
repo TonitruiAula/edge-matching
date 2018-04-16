@@ -458,11 +458,11 @@ def match3(imgL, imgR, num, t_coeff, scale, ndisp=64, h_size=2):
         if y1 == y2: #and x1 - x2 <= ndisp and x1 - x2 >= 10:
             coef = areaCoeff(grayL,grayR,h_size,y1,x1,y2,x2)
             if coef >= t_coeff:
-                disp[y1,x1] = x1 - x2
+                disp[y1,x1] = kp1[matches[i].queryIdx].pt[0] - kp2[matches[i].trainIdx].pt[0]
     maxDisp = disp.max()
     return maxDisp, disp
 
-        
+
 
 
 
