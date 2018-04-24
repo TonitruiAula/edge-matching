@@ -9,6 +9,7 @@ import math
 import lbp
 import operator
 from preprocess import *
+import gms_matcher
 
 # 计算区域核的相关系数
 def areaCoeff(array1,array2,rad,i1,j1,i2,j2):
@@ -433,20 +434,31 @@ def match3(imgL, imgR, num, t_coeff, scale, ndisp=64, h_size=2):
     # imgR = hisEqualc(imgR)
 
     orb = cv2.ORB_create(nfeatures = int(num*scale))
+    orb.setFastThreshold(0)
     kp1,des1 = orb.detectAndCompute(imgL,None)
     kp2,des2 = orb.detectAndCompute(imgR,None)
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    if cv2.__version__.startswith('3'):
+        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    else:
+        bf = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True)
     matches = bf.match(des1,des2)
-    matches = sorted(matches, key = lambda x:x.distance) 
+    if scale != 1:
+        matches = sorted(matches, key = lambda x:x.distance) 
     height = imgL.shape[0]
     width = imgL.shape[1]
     disp = np.zeros((height,width))
     num = int(len(matches) / scale)
+    print num
+    count = 0
     for i in xrange(num):
-        x1 = int(kp1[matches[i].queryIdx].pt[0])
-        y1 = int(kp1[matches[i].queryIdx].pt[1])
-        x2 = int(kp2[matches[i].trainIdx].pt[0])
-        y2 = int(kp2[matches[i].trainIdx].pt[1])
+        x1f = kp1[matches[i].queryIdx].pt[0]
+        y1f = kp1[matches[i].queryIdx].pt[1]
+        x2f = kp2[matches[i].trainIdx].pt[0]
+        y2f = kp2[matches[i].trainIdx].pt[1]
+        x1 = int(round(x1f))
+        y1 = int(round(y1f))
+        x2 = int(round(x2f))
+        y2 = int(round(y2f))
         if x1 <= h_size or x1 >= width-h_size:
             continue
         if y1 <= h_size or y1 >= height-h_size:
@@ -455,14 +467,98 @@ def match3(imgL, imgR, num, t_coeff, scale, ndisp=64, h_size=2):
             continue
         if y2 <= h_size or y2 >= height-h_size:
             continue
-        if y1 == y2: #and x1 - x2 <= ndisp and x1 - x2 >= 10:
+        if y1 == y2:# math.fabs(y1f-y2f) < 1.0: 
             coef = areaCoeff(grayL,grayR,h_size,y1,x1,y2,x2)
             if coef >= t_coeff:
                 disp[y1,x1] = kp1[matches[i].queryIdx].pt[0] - kp2[matches[i].trainIdx].pt[0]
+                count += 1
+            # disp[y1,x1] = kp1[matches[i].queryIdx].pt[0] - kp2[matches[i].trainIdx].pt[0]
+            # count += 1
     maxDisp = disp.max()
+    print count
     return maxDisp, disp
 
 
+def matchGMS(imgL, imgR, num):
+    # imgL = gms_matcher.imresize(imgL, 480)
+    # imgR = gms_matcher.imresize(imgR, 480)
+
+    height = imgL.shape[0]
+    width = imgL.shape[1]
+    disp = np.zeros((height,width))
+
+    orb = cv2.ORB_create(num)
+    orb.setFastThreshold(0)
+    if cv2.__version__.startswith('3'):
+        matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    else:
+        matcher = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True)
+    gms = gms_matcher.GmsMatcher(orb, matcher)
+
+    matches = gms.compute_matches(imgL, imgR)
+
+    num = int(len(matches))
+    print num
+    count = 0
+    for i in xrange(num):
+        x1f = gms.keypoints_image1[matches[i].queryIdx].pt[0]
+        y1f = gms.keypoints_image1[matches[i].queryIdx].pt[1]
+        x2f = gms.keypoints_image2[matches[i].trainIdx].pt[0]
+        y2f = gms.keypoints_image2[matches[i].trainIdx].pt[1]
+        x1 = int(round(x1f))
+        y1 = int(round(y1f))
+        x2 = int(round(x2f))
+        y2 = int(round(y2f))
+        if y1 == y2: 
+            disp[y1,x1] = gms.keypoints_image1[matches[i].queryIdx].pt[0] - gms.keypoints_image2[matches[i].trainIdx].pt[0]
+            count += 1
+    maxDisp = disp.max()
+    print count
+    return maxDisp, disp
+
+
+def matchGMS2(imgL, imgR, num, t_coeff, h_size=2):
+    # imgL = gms_matcher.imresize(imgL, 480)
+    # imgR = gms_matcher.imresize(imgR, 480)
+
+    grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+    grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+
+    height = imgL.shape[0]
+    width = imgL.shape[1]
+    disp = np.zeros((height,width))
+
+    orb = cv2.ORB_create(num)
+    orb.setFastThreshold(0)
+    if cv2.__version__.startswith('3'):
+        matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    else:
+        matcher = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True)
+    gms = gms_matcher.GmsMatcher(orb, matcher)
+
+    matches = gms.compute_matches(imgL, imgR)
+
+    num = int(len(matches))
+    print num
+    count = 0
+    for i in xrange(num):
+        x1f = gms.keypoints_image1[matches[i].queryIdx].pt[0]
+        y1f = gms.keypoints_image1[matches[i].queryIdx].pt[1]
+        x2f = gms.keypoints_image2[matches[i].trainIdx].pt[0]
+        y2f = gms.keypoints_image2[matches[i].trainIdx].pt[1]
+        x1 = int(round(x1f))
+        y1 = int(round(y1f))
+        x2 = int(round(x2f))
+        y2 = int(round(y2f))
+        if y1 == y2: 
+            coef = areaCoeff(grayL,grayR,h_size,y1,x1,y2,x2)
+            if coef >= t_coeff:
+                disp[y1,x1] = gms.keypoints_image1[matches[i].queryIdx].pt[0] - gms.keypoints_image2[matches[i].trainIdx].pt[0]
+                count += 1
+            
+    maxDisp = disp.max()
+    print count
+    return maxDisp, disp
 
 
 

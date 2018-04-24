@@ -21,6 +21,7 @@ def getLog(disp, gt, name):
     pointerr = []
     points = []
     deptherr = []
+    blank = []
 
     # 获取遮挡信息图
     caliFile = open('images/' + name + '/calib.txt','r')
@@ -53,6 +54,8 @@ def getLog(disp, gt, name):
                 errZ += ze
                 pointerr.append(e)
                 deptherr.append(ze)
+            elif d > 0:
+                blank.append([i,j])
 
     if count > 0:
         err /= count
@@ -62,6 +65,7 @@ def getLog(disp, gt, name):
     
     points.sort(key=operator.itemgetter(7),reverse=True)
     np.savetxt('images/' + name + '/log.txt',points,fmt='%d %d %.2f %.2f %.2f %.2f %.2f %.2f %.6f')
+    np.savetxt('images/' + name + '/blank.txt',blank,fmt='%d %d')
 
     return [count, err, maxerr, errZ, maxerrZ]
 

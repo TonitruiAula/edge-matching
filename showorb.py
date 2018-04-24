@@ -22,6 +22,8 @@ if __name__ == '__main__':
 
     rst = np.zeros(img.shape,img.dtype)
     orb = cv2.ORB_create(nfeatures = count)
+    if len(sys.argv) > 4:
+        orb.setFastThreshold(int(sys.argv[4]))
     kp,des = orb.detectAndCompute(img,None) 
     print len(kp)
     for p in kp:

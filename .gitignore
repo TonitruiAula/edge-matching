@@ -131,3 +131,9 @@ badstat_no.txt
 imgList.txt
 showkittigt.py
 evalDepth.py
+/c
+/gms
+/gmsc
+/c/*.*
+/gms/*.*
+/gmsc/*.*

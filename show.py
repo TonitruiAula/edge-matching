@@ -32,6 +32,10 @@ def draw2(arg):
     print 'distance:%.2fm' % (dis)
     canvas = rst.copy()
     width = imgL.shape[1]
+    for p in blanklist:
+        y = int(p[0])
+        x = int(p[1])
+        cv2.circle(canvas,(x,y),r,(0,255,255))
     for p in loglist:
         y = int(p[0])
         x = int(p[1])
@@ -91,6 +95,8 @@ if __name__ == '__main__':
         isAbs = (type == '-a')
         t = float(sys.argv[3])
         count = int(maxDist / 500.0)+1
+        blank = np.loadtxt('images/' + img + '/blank.txt')
+        blanklist = blank.tolist()
         cv2.namedWindow(img)
         cv2.createTrackbar('dis',img,0,count,draw2)
         draw2(0)

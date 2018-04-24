@@ -34,6 +34,12 @@ def saveDisp(name, param, fun_type):
         num, t_coeff, scale = param
         # maxDisp, disp = match3(imgL, imgR, num, t_coeff, scale)
         maxDisp, disp = match3(imgL, imgR, num, t_coeff, scale)
+    elif fun_type == '-gms':
+        num = param
+        maxDisp, disp = matchGMS(imgL, imgR, num)
+    elif fun_type == '-gms2':
+        num, t_coeff = param
+        maxDisp, disp = matchGMS2(imgL, imgR, num, t_coeff)
     else:
         print 'function type error!'
         return
@@ -88,6 +94,18 @@ if __name__ == '__main__':
         t_coeff = float(sys.argv[4])
         scale = float(sys.argv[5])
         param = [num, t_coeff, scale]
+        for name in imgList:
+            disp = saveDisp(name, param, fun_type)
+        totalRst(imgList)
+    elif fun_type == '-gms':
+        num = int(sys.argv[3])
+        for name in imgList:
+            disp = saveDisp(name, num, fun_type)
+        totalRst(imgList)
+    elif fun_type == '-gms2':
+        num = int(sys.argv[3])
+        t_coeff = float(sys.argv[4])
+        param = [num, t_coeff]
         for name in imgList:
             disp = saveDisp(name, param, fun_type)
         totalRst(imgList)
