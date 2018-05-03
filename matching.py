@@ -10,6 +10,7 @@ import lbp
 import operator
 from preprocess import *
 import gms_matcher
+import olm
 
 # 计算区域核的相关系数
 def areaCoeff(array1,array2,rad,i1,j1,i2,j2):
@@ -635,18 +636,21 @@ def keypointsinline(kp,des,height):
     height = int(height)
     kpline = []
     deslinelist = []
+    indexes = []
     for i in xrange(height):
         kpline.append([])
         deslinelist.append([])
+        indexes.append([])
     num = len(kp)
     for i in xrange(num):
         y = int(round(kp[i].pt[1]))
         kpline[y].append(kp[i])
         deslinelist[y].append(des[i])
+        indexes[y].append(i)
     desline = []
     for i in xrange(height):
         desline.append(np.array(deslinelist[i]))
-    return kpline,desline
+    return kpline,desline,indexes
 
 def findIdx(matches,queryIdx):
     for m in matches:
@@ -660,11 +664,11 @@ def match4(imgL, imgR, num):
     orb = cv2.ORB_create(nfeatures = num)
     height = imgL.shape[0]
     width = imgL.shape[1]
-    orb.setFastThreshold(10)
+    orb.setFastThreshold(0)
     kp1,des1 = orb.detectAndCompute(imgL,None)
     kp2,des2 = orb.detectAndCompute(imgR,None)
-    kpline1,desline1 = keypointsinline(kp1,des1,height)
-    kpline2,desline2 = keypointsinline(kp2,des2,height)
+    kpline1,desline1,indexes1 = keypointsinline(kp1,des1,height)
+    kpline2,desline2,indexes2 = keypointsinline(kp2,des2,height)
     if cv2.__version__.startswith('3'):
         bf = cv2.BFMatcher(cv2.NORM_HAMMING)
     else:
@@ -678,6 +682,7 @@ def match4(imgL, imgR, num):
             continue
         desl1 = desline1[i]
         desl2 = desline2[i]
+        assert(len(kpl1)==len(desl1) and len(kpl2)==len(desl2))
         ltor = bf.knnMatch(desl1,desl2,k=3)
         rtol = bf.match(desl2,desl1)
         for lrm in ltor:
@@ -687,7 +692,7 @@ def match4(imgL, imgR, num):
             for j in xrange(len(lrm)):
                 rIdx = lrm[j].trainIdx
                 lIdx2 = findIdx(rtol,rIdx)
-                if lIdx == lIdx2 and lrm[j].distance < t:
+                if lIdx == lIdx2:# and lrm[j].distance < t:
                     xR = kpl2[rIdx].pt[0]
                     finalmatches.append([i,xL,xR,1])
                     break
@@ -703,5 +708,30 @@ def match4(imgL, imgR, num):
     maxDisp = disp.max()
     print len(finalmatches)
     return maxDisp, disp
+
+def match5(imgL, imgR, num):
+    olmatcher = olm.olMatcher(imgL,imgR,num)
+    olmatcher.match()
+    gms = gms_matcher.GmsMatcher(olmatcher.orb,olmatcher)
+    height = imgL.shape[0]
+    width = imgL.shape[1]
+    disp = np.zeros((height,width))
+    gms.keypoints_image1 = olmatcher.kp1
+    gms.keypoints_image2 = olmatcher.kp2
+    matches = gms.filtMatches(olmatcher.imgL,olmatcher.imgL,olmatcher.matches)
+    num = int(len(matches))
+    print num
+    for i in xrange(num):
+        x1f = olmatcher.kp1[matches[i].queryIdx].pt[0]
+        yf = olmatcher.kp1[matches[i].queryIdx].pt[1]
+        x2f = olmatcher.kp2[matches[i].trainIdx].pt[0]
+        x1 = int(round(x1f))
+        y = int(round(yf))
+        x2 = int(round(x2f))
+        disp[y,x1] = x1f-x2f
+
+    maxDisp = disp.max()
+    return maxDisp, disp
+
 
 

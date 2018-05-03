@@ -103,8 +103,29 @@ class GmsMatcher:
 
         if self.gms_matches:
             self.empty_matches()
-        
+
         all_matches = self.matcher.match(descriptors_image1, descriptors_image2)
+        self.normalize_points(self.keypoints_image1, size1, self.normalized_points1)
+        self.normalize_points(self.keypoints_image2, size2, self.normalized_points2)
+        self.matches_number = len(all_matches)
+        self.convert_matches(all_matches, self.matches)
+        self.initialize_neighbours(self.grid_neighbor_left, self.grid_size_left)
+
+        mask, num_inliers = self.get_inlier_mask(False, False)
+        print('Found', num_inliers, 'matches')
+
+        for i in range(len(mask)):
+            if mask[i]:
+                self.gms_matches.append(all_matches[i])
+        return self.gms_matches
+
+    # matches filter
+    def filtMatches(self,img1, img2, all_matches):
+        if self.gms_matches:
+            self.empty_matches()
+
+        size1 = Size(img1.shape[1], img1.shape[0])
+        size2 = Size(img2.shape[1], img2.shape[0])
         self.normalize_points(self.keypoints_image1, size1, self.normalized_points1)
         self.normalize_points(self.keypoints_image2, size2, self.normalized_points2)
         self.matches_number = len(all_matches)

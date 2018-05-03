@@ -33,7 +33,7 @@ def saveDisp(name, param, fun_type):
         # maxDisp, disp = match2(imgL, imgR, param, ndisp)
         num, t_coeff, scale = param
         # maxDisp, disp = match3(imgL, imgR, num, t_coeff, scale)
-        maxDisp, disp = match4(imgL, imgR, num)
+        maxDisp, disp = match5(imgL, imgR, num)
     elif fun_type == '-gms':
         num = param
         maxDisp, disp = matchGMS(imgL, imgR, num)
