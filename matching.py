@@ -561,5 +561,147 @@ def matchGMS2(imgL, imgR, num, t_coeff, h_size=2):
     return maxDisp, disp
 
 
+def calCost(grayL, grayR, sob, i, jL, jR):
+    sobLa, sobLd, sobRa, sobRd = sob
+    cost1 = (float(grayL[i,jL]) - float(grayR[i,jR])) ** 2
+    mL = float(sobLa[i,jL])
+    mR = float(sobRa[i,jR])
+    thetaL = math.pi/180.0*sobLd[i,jL]
+    thetaR = math.pi/180.0*sobRd[i,jR]
+    cost2 = (mL)**2+(mR)**2-2*mL*mR*math.cos(thetaL-thetaR)
+    cost = math.sqrt(cost1 + cost2)
+    return cost
+
+def getEdgeCoord(edge):
+    h,w = edge.shape
+    ec = []
+    for j in xrange(w):
+        ecx = []
+        for i in xrange(h):
+            if edge[i,j]>0:
+                ecx.append(i)
+        ec.append(ecx)
+    # print ec
+    # print len(ec)
+    return ec
+
+def firstPass(edgeL, edgeR, grayL, grayR, sob, minDisp, maxDisp):
+    w = len(edgeL)
+    matches = []
+    for j in xrange(w):
+        for i in edgeL[j]:
+            minCost = float('inf')
+            jR = -1
+            for k in xrange(j-maxDisp,j-minDisp+1):
+                if k < 0 or k >= w:
+                    break
+                if i in edgeR[k]:
+                    cost = calCost(grayL,grayR,sob,i,j,k)
+                    if cost < minCost:
+                        jR = k
+                        minCost = cost
+            if jR != -1:
+                matches.append([i,j,jR])
+    print len(matches)
+    return matches
+
+def matchDP(imgL, imgR):
+    height = imgL.shape[0]
+    width = imgL.shape[1]
+    disp = np.zeros((height,width))
+    grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+    grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+    sob = getEdge1(imgL, imgR)
+    cannyL = cv2.Canny(grayL,200,400)
+    cannyR = cv2.Canny(grayR,200,400)
+    edgeL = getEdgeCoord(cannyL)
+    edgeR = getEdgeCoord(cannyR)
+    minDisp = 4
+    maxDisp = 64
+    firstMatches = firstPass(edgeL, edgeR, grayL, grayR, sob, minDisp, maxDisp)
+    # cannyL, contoursL, hierarchyL = cv2.findContours(cannyL,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    # cannyR, contoursR, hierarchyR = cv2.findContours(cannyR,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+
+    for m in firstMatches:
+        i = m[0]
+        j = m[1]
+        jR = m[2]
+        disp[i,j] = j-jR
+    maxDisp = disp.max()
+    return maxDisp, disp
+
+
+def keypointsinline(kp,des,height):
+    height = int(height)
+    kpline = []
+    deslinelist = []
+    for i in xrange(height):
+        kpline.append([])
+        deslinelist.append([])
+    num = len(kp)
+    for i in xrange(num):
+        y = int(round(kp[i].pt[1]))
+        kpline[y].append(kp[i])
+        deslinelist[y].append(des[i])
+    desline = []
+    for i in xrange(height):
+        desline.append(np.array(deslinelist[i]))
+    return kpline,desline
+
+def findIdx(matches,queryIdx):
+    for m in matches:
+        if m.queryIdx == queryIdx:
+            return m.trainIdx
+    return -1
+
+def match4(imgL, imgR, num):
+    grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+    grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+    orb = cv2.ORB_create(nfeatures = num)
+    height = imgL.shape[0]
+    width = imgL.shape[1]
+    orb.setFastThreshold(10)
+    kp1,des1 = orb.detectAndCompute(imgL,None)
+    kp2,des2 = orb.detectAndCompute(imgR,None)
+    kpline1,desline1 = keypointsinline(kp1,des1,height)
+    kpline2,desline2 = keypointsinline(kp2,des2,height)
+    if cv2.__version__.startswith('3'):
+        bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+    else:
+        bf = cv2.BFMatcher_create(cv2.NORM_HAMMING)
+    finalmatches = []
+    t = 64
+    for i in xrange(height):
+        kpl1 = kpline1[i]
+        kpl2 = kpline2[i]
+        if len(kpl1) == 0 or len(kpl2) == 0:
+            continue
+        desl1 = desline1[i]
+        desl2 = desline2[i]
+        ltor = bf.knnMatch(desl1,desl2,k=3)
+        rtol = bf.match(desl2,desl1)
+        for lrm in ltor:
+            lIdx = lrm[0].queryIdx
+            xL = kpl1[lIdx].pt[0]
+            lIdx2 = -1
+            for j in xrange(len(lrm)):
+                rIdx = lrm[j].trainIdx
+                lIdx2 = findIdx(rtol,rIdx)
+                if lIdx == lIdx2 and lrm[j].distance < t:
+                    xR = kpl2[rIdx].pt[0]
+                    finalmatches.append([i,xL,xR,1])
+                    break
+            if lIdx2 == -1:
+                rIdx = lrm[0].trainIdx
+                if lrm[0].distance < t:
+                    xR = kpl2[rIdx].pt[0]
+                    finalmatches.append([i,xL,xR,2])
+    disp = np.zeros((height,width))
+    for y,xL,xR,mt in finalmatches:
+        xLi = int(round(xL))
+        disp[y,xLi] = xL - xR
+    maxDisp = disp.max()
+    print len(finalmatches)
+    return maxDisp, disp
 
 

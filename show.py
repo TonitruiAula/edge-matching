@@ -32,10 +32,10 @@ def draw2(arg):
     print 'distance:%.2fm' % (dis)
     canvas = rst.copy()
     width = imgL.shape[1]
-    for p in blanklist:
-        y = int(p[0])
-        x = int(p[1])
-        cv2.circle(canvas,(x,y),r,(0,255,255))
+    # for p in blanklist:
+    #     y = int(p[0])
+    #     x = int(p[1])
+    #     cv2.circle(canvas,(x,y),r,(0,255,255))
     for p in loglist:
         y = int(p[0])
         x = int(p[1])
@@ -44,11 +44,11 @@ def draw2(arg):
                 cv2.circle(canvas,(x,y),r,(0,255,0))
             else:
                 cv2.circle(canvas,(x,y),r,(0,0,255))
-        else:
-            if isGP(p,isAbs,t):
-                cv2.circle(canvas,(x,y),r,(255,255,0))
-            else:
-                cv2.circle(canvas,(x,y),r,(255,0,255))
+        # else:
+        #     if isGP(p,isAbs,t):
+        #         cv2.circle(canvas,(x,y),r,(255,255,0))
+        #     else:
+        #         cv2.circle(canvas,(x,y),r,(255,0,255))
     cv2.imshow(img,canvas)
 
 if __name__ == '__main__':
